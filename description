@@ -1,0 +1,18 @@
+snake
+
+to render:
+table of [Nothing|Snake(n)|Food]
+
+input:
+direction' = direction `applyRotation` getDir
+
+moment:
++1 to all snake pixels
+remove pixel with n>len
+add pixel 0 in 1-pixel + direction
+headTouched (old pixel content)
+
+world:
+- table size
+- table
+- snake length
