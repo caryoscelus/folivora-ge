@@ -14,6 +14,7 @@ import Control.Wire hiding (empty, unless)
 import Game.Graphics
 
 import qualified Graphics.UI.GLFW as GLFW
+import Graphics.UI.GLFW (Key(..), KeyState(..), getKey)
 
 import Render
 import World
@@ -48,12 +49,28 @@ renderFrame (window, graphics) frame = do
 gFail :: (Typeable e) => e -> a
 gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
 
-glGo :: (Renderable r t) => () -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity () r -> IO ()
+glGo :: (Renderable r t) => () -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity InputState r -> IO ()
 glGo inputState textures screen s w = do
     (ds, s') <- stepSession s
-    let Identity (mx, w') = stepWire w ds (Right inputState)
+    
+    let window = fst screen
+    
+    let gk :: Key -> IO Bool
+        gk k = liftM (/=KeyState'Released) (getKey window k)
+    
+    up    <- gk Key'Up
+    down  <- gk Key'Down
+    right <- gk Key'Right
+    left  <- gk Key'Left
+    esc   <- gk Key'Escape
+    
+    let inputState' = InputState up down right left esc
+    
+    let Identity (mx, w') = stepWire w ds (Right inputState')
     let x = either gFail id mx
+    
     renderFrame screen $ render textures x
+    
     glGo inputState textures screen s' w'
 
 main :: IO ()

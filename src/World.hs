@@ -34,5 +34,13 @@ data SnakeWorld = SnakeWorld
 snakeWorld :: Int -> Int -> SnakeWorld
 snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2
 
-snake :: SnakeWorld -> Wire s e m () SnakeWorld
+data InputState = InputState
+        { getUp :: Bool
+        , getDown :: Bool
+        , getRight :: Bool
+        , getLeft :: Bool
+        , getEsc :: Bool
+        }
+
+snake :: SnakeWorld -> Wire s e m InputState SnakeWorld
 snake start = mkConst (Right start)
