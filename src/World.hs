@@ -134,5 +134,11 @@ realSnake w0 = proc (input, w) -> do
     w' <- arr stepWorld . (second $ delay w0) -< (input, w)
     returnA -< (w', w')
 
-snake :: (MonadFix m) => SnakeWorld -> Wire s e m a SnakeWorld
-snake start = loop (realSnake start)
+snake0 :: (MonadFix m) => SnakeWorld -> Wire s e m a SnakeWorld
+snake0 start = loop (realSnake start)
+
+snake :: (MonadFix m, Monoid e, HasTime t s) => SnakeWorld -> Wire s e m a SnakeWorld
+snake start = asSoonAs . rtLoop . (snake0 start)
+
+rtLoop :: (Monad m, Monoid e, HasTime t s) => Wire s e m a (Event a)
+rtLoop = for 1 . now --> rtLoop
