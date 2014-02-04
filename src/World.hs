@@ -30,13 +30,52 @@ putSnake table = changeCell (0, 0) (CellSnake 0)
                . changeCell (1, 0) (CellSnake 1)
                $ table
 
+data Direction = DDown | DRight | DUp | DLeft
+
+increaseSnakeCells :: SnakeTable -> SnakeTable
+increaseSnakeCells (SnakeTable table) = SnakeTable $ map incLine table
+    where
+        incLine :: [SnakeCell] -> [SnakeCell]
+        incLine = map inc
+        
+        inc :: SnakeCell -> SnakeCell
+        inc (CellSnake n) = CellSnake (n+1)
+        inc x = x
+
+-- TODO: make fmap over SnakeTable
+
+removeTail :: Int -> SnakeTable -> SnakeTable
+removeTail m (SnakeTable table) = SnakeTable $ map (remTL m) table
+    where
+        remTL :: Int -> [SnakeCell] -> [SnakeCell]
+        remTL m = map (remC m)
+        
+        remC :: Int -> SnakeCell -> SnakeCell
+        remC m (CellSnake n) | n >= m = CellEmpty
+        remC _ x = x
+
+addHead :: Direction -> SnakeTable -> SnakeTable
+addHead dir = id
+
+moveSnake :: Int -> Direction -> SnakeTable -> SnakeTable
+moveSnake len dir table = addHead dir
+                        . removeTail len
+                        . increaseSnakeCells
+                        $ table
+
+
 data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
+        , getDirection :: Direction
         }
 
 snakeWorld :: Int -> Int -> SnakeWorld
-snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2
+snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown
+
+-- FIXME
+changeTable :: SnakeTable -> SnakeWorld -> SnakeWorld
+changeTable t w = w { getTable = t }
 
 data InputState = InputState
         { getUp :: Bool
@@ -47,7 +86,11 @@ data InputState = InputState
         }
 
 stepWorld :: (InputState, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) = w
+stepWorld (input, w) = changeTable (moveSnake len dir table) w
+    where
+        table = getTable w
+        dir = getDirection w
+        len = getLength w
 
 realSnake :: (Monad m) => SnakeWorld -> Wire s e m (InputState, SnakeWorld) (SnakeWorld, SnakeWorld)
 realSnake w0 = proc (input, w) -> do
