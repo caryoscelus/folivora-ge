@@ -4,6 +4,9 @@ module World where
 
 import Control.Monad.Fix
 
+import Data.Maybe
+import Data.List
+
 import Prelude hiding ((.), id, filter, null)
 import qualified Prelude as Prelude
 
@@ -32,6 +35,12 @@ putSnake table = changeCell (0, 0) (CellSnake 0)
 
 data Direction = DDown | DRight | DUp | DLeft
 
+dirToPair :: Direction -> (Int, Int)
+dirToPair DDown  = ( 0,  1)
+dirToPair DRight = ( 1,  0)
+dirToPair DUp    = ( 0, -1)
+dirToPair DLeft  = (-1,  0)
+
 increaseSnakeCells :: SnakeTable -> SnakeTable
 increaseSnakeCells (SnakeTable table) = SnakeTable $ map incLine table
     where
@@ -54,8 +63,34 @@ removeTail m (SnakeTable table) = SnakeTable $ map (remTL m) table
         remC m (CellSnake n) | n >= m = CellEmpty
         remC _ x = x
 
+applyDirection :: Direction -> (Int, Int) -> (Int, Int) -> (Int, Int)
+applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
+    where
+        (x1, y1) = (x+xd, y+yd)
+        (xd, yd) = dirToPair dir
+
 addHead :: Direction -> SnakeTable -> SnakeTable
-addHead dir = id
+addHead dir (SnakeTable table) =
+    SnakeTable (take y' table ++ [line'] ++ drop (y'+1) table)
+    
+    where
+        line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
+        line = table !! y'
+        (x', y') = applyDirection dir (mx, my) (x, y)
+        my = length table
+        mx = length . head $ table
+        y = fromMaybe (error "can't find head") $ findIndex lineHasHead table
+        x = fromMaybe (error "can't find head") $ findIndex cellIsHead (table !! y)
+        lineHasHead ln = isJust $ findIndex cellIsHead ln
+        cellIsHead (CellSnake 1) = True
+        cellIsHead _ = False
+
+-- for y in range():
+--     for x in range():
+--         if t[y][x] == 0:
+--             r = (x, y)
+-- x', y' = directionApply x, y
+-- t[y'][x'] = None
 
 moveSnake :: Int -> Direction -> SnakeTable -> SnakeTable
 moveSnake len dir table = addHead dir
