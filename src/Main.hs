@@ -1,9 +1,17 @@
 -- {-# LANGUAGE BangPatterns #-}
+-- {-# LANGUAGE FlexibleContexts #-}
 
 import Control.Monad
 import Control.Applicative
 import Data.Maybe
 import Control.Monad.Writer
+import Data.Dynamic
+
+import Prelude hiding ((.), id, filter, null)
+import qualified Prelude as Prelude
+
+import FRP.Netwire hiding (empty, unless)
+import Control.Wire hiding (empty, unless)
 
 import Linear.V2
 
@@ -14,6 +22,7 @@ import Game.Graphics
 import qualified Graphics.UI.GLFW as GLFW
 
 import Render
+import World
 
 -- import Game.Graphics.Utils
 -- import Graphics.Rendering.OpenGL.Raw.Core32
@@ -36,8 +45,8 @@ initGL = do
     graphicsState <- initializeGraphics
     return (window, graphicsState)
 
-renderFrame :: GLFW.Window -> GraphicsState -> Space Sprite -> IO ()
-renderFrame window graphics frame = do
+renderFrame :: (GLFW.Window, GraphicsState) -> Space Sprite -> IO ()
+renderFrame (window, graphics) frame = do
     clear
     _ <- draw graphics frame
     GLFW.swapBuffers window
@@ -89,11 +98,25 @@ frame2 spr = runRender $ frame2_render spr
 frame :: Space Sprite -> Space Sprite
 frame = frame2
 
+gFail :: (Typeable e) => e -> a
+gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
+
+glGo :: (Renderable r t) => () -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity () r -> IO ()
+glGo inputState textures screen s w = do
+    (ds, s') <- stepSession s
+    let Identity (mx, w') = stepWire w ds (Right inputState)
+    let x = either gFail id mx
+    renderFrame screen $ render textures x
+    glGo inputState textures screen s' w'
+
 main :: IO ()
 main = do
     (window, graphics) <- initGL
     sprite0 <- getSprite
     let f = frame sprite0
-    renderFrame window graphics f
-    loopForever
-    where loopForever = putStr "" >> loopForever
+    
+    texs <- (load :: IO SnakeTextures)
+--     let texs' :: SnakeTextures
+--         texs' = texs
+    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 10 10)
+    renderFrame (window, graphics) f
