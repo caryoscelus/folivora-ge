@@ -42,4 +42,9 @@ instance Loadable SnakeTextures where
         return . SnakeTextures $ sprite (V2 0 0) (V2 8 8) tex
 
 instance Renderable SnakeWorld SnakeTextures where
-    render texs world = fixCoords *> getRedSquare texs
+    render texs world = fixCoords
+                     *> translate (V2 4 4)
+                     *> translate (V2 64 8)
+                     *> (redSquare <|> (translate (V2 16 0) *> redSquare))
+        where
+            redSquare = getRedSquare texs
