@@ -116,15 +116,14 @@ data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
         , getDirection :: Direction
-        , getUpdated :: Bool
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> SnakeWorld
-snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown False
+snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown
 
 -- FIXME
 changeTable :: SnakeTable -> SnakeWorld -> SnakeWorld
-changeTable t w = w { getTable = t, getUpdated = True }
+changeTable t w = w { getTable = t }
 
 setDir :: Direction -> SnakeWorld -> SnakeWorld
 setDir d w = w { getDirection = d }
@@ -161,7 +160,6 @@ stepWorld (input, w) = changeTable (moveSnake len dir'' table)
         dir' = fromMaybe dir (dirFromInput input)
         dir'' = if opposite dir dir' then dir else dir'
         len = getLength w
-        upd = getUpdated w
 
 snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
 snakeNew = accumE (flip . curry $ stepWorld)
