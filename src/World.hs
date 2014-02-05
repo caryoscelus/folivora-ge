@@ -38,14 +38,11 @@ putSnake table = changeCell (0, 0) (CellSnake 0)
 
 data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
 
+tupleOp :: (a -> b -> c) -> (a, a) -> (b, b) -> (c, c)
+tupleOp f = (f *** f) >>> uncurry (***)
+
 opposite :: Direction -> Direction -> Bool
-opposite DDown DUp = True
-opposite DDown _ = False
-opposite DRight DLeft = True
-opposite DRight _ = False
-opposite DLeft DUp = False
-opposite a b | a == b    = False
-             | otherwise = opposite b a
+opposite a b = tupleOp (+) (dirToPair a) (dirToPair b) == (0, 0)
 
 dirToPair :: Direction -> (Int, Int)
 dirToPair DDown  = ( 0,  1)
