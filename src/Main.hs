@@ -82,4 +82,4 @@ main = do
     (window, graphics) <- initGL
     
     texs <- (load :: IO SnakeTextures)
-    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 10 10)
+    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30)
