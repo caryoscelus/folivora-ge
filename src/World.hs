@@ -36,7 +36,16 @@ putSnake table = changeCell (0, 0) (CellSnake 0)
                . changeCell (1, 0) (CellSnake 1)
                $ table
 
-data Direction = DDown | DRight | DUp | DLeft deriving (Show)
+data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
+
+opposite :: Direction -> Direction -> Bool
+opposite DDown DUp = True
+opposite DDown _ = False
+opposite DRight DLeft = True
+opposite DRight _ = False
+opposite DLeft DUp = False
+opposite a b | a == b    = False
+             | otherwise = opposite b a
 
 dirToPair :: Direction -> (Int, Int)
 dirToPair DDown  = ( 0,  1)
@@ -143,13 +152,14 @@ dirFromInput inp = horiz <|> vert
         left  = getLeft inp
 
 stepWorld :: (InputState, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) = changeTable (moveSnake len dir' table)
-                     . setDir dir'
+stepWorld (input, w) = changeTable (moveSnake len dir'' table)
+                     . setDir dir''
                      $ w
     where
         table = getTable w
         dir = getDirection w
         dir' = fromMaybe dir (dirFromInput input)
+        dir'' = if opposite dir dir' then dir else dir'
         len = getLength w
         upd = getUpdated w
 
