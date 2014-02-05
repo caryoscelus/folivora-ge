@@ -150,10 +150,10 @@ dirFromInput inp = horiz <|> vert
         right = getRight inp
         left  = getLeft inp
 
-stepWorld :: (InputState, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) = changeTable (moveSnake len dir'' table)
-                     . setDir dir''
-                     $ w
+stepWorld :: SnakeWorld -> InputState -> SnakeWorld
+stepWorld w input = changeTable (moveSnake len dir'' table)
+                  . setDir dir''
+                  $ w
     where
         table = getTable w
         dir = getDirection w
@@ -162,12 +162,10 @@ stepWorld (input, w) = changeTable (moveSnake len dir'' table)
         len = getLength w
 
 snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
-snakeNew = accumE (flip . curry $ stepWorld)
+snakeNew = accumE stepWorld
 
 snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m InputState SnakeWorld
 snake start = rtLoop >>> (snakeNew start) >>> asSoonAs
 
 rtLoop :: (Monad m, Monoid e, HasTime t s, Fractional t) => Wire s e m a (Event a)
--- rtLoop = now --> innerLoop
---     where innerLoop = at 1 --> innerLoop
 rtLoop = for 0.2 . now --> rtLoop
