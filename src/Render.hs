@@ -33,13 +33,17 @@ fixCoords = do
 -- snake
 data SnakeTextures = SnakeTextures
         { getRedSquare :: Space Sprite
+        , getGreenSquare :: Space Sprite
         }
 
 instance Loadable SnakeTextures where
     load = do
         etex <- loadTexture Standard Linear "16x16-red.png"
         let tex = either error id etex
-        return . SnakeTextures $ sprite (V2 0 0) (V2 16 16) tex
+        return SnakeTextures
+                { getRedSquare   = sprite (V2 0 0) (V2 16 16) tex
+                , getGreenSquare = sprite (V2 0 0) (V2 16 16) tex
+                }
 
 renderLine :: (a -> Image) -> [a] -> Image
 renderLine f t = foldr folding empty t
@@ -58,6 +62,8 @@ instance Renderable SnakeWorld SnakeTextures where
         where
             renderedTable = renderTable (\c -> case c of
                                     CellSnake _ -> redSquare
+                                    CellFood    -> greenSquare
                                     _           -> empty)
                                 (getTC . getTable $ world)
             redSquare = translate (V2 8 8) *> getRedSquare texs
+            greenSquare = translate (V2 8 8) *> getGreenSquare texs

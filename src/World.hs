@@ -153,8 +153,18 @@ dirFromInput inp = horiz <|> vert
         right = getRight inp
         left  = getLeft inp
 
+addRandomFood :: InputState -> SnakeWorld -> SnakeWorld
+addRandomFood inp w = setTable (changeCell xy CellFood t) w
+    where
+        xy = (x, y)
+        gen = getRandom inp
+        (x, gen') = randomR (0, getXs t-1) gen
+        (y, gen'') = randomR (0, getYs t-1) gen'
+        t = getTable w
+
 stepWorld :: SnakeWorld -> InputState -> SnakeWorld
-stepWorld w input = setTable (moveSnake len dir'' table)
+stepWorld w input = addRandomFood input
+                  . setTable (moveSnake len dir'' table)
                   . setDir dir''
                   $ w
     where
