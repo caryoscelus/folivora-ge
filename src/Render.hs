@@ -39,17 +39,17 @@ instance Loadable SnakeTextures where
     load = do
         etex <- loadTexture Standard Linear "16x16-red.png"
         let tex = either error id etex
-        return . SnakeTextures $ sprite (V2 0 0) (V2 8 8) tex
+        return . SnakeTextures $ sprite (V2 0 0) (V2 16 16) tex
 
 renderLine :: (a -> Image) -> [a] -> Image
 renderLine f t = foldr folding empty t
     where
-        folding x r = f x <|> (translate (V2 8 0) *> r)
+        folding x r = f x <|> (translate (V2 16 0) *> r)
 
 renderTable :: (a -> Image) -> [[a]] -> Image
 renderTable f t = foldr folding empty t
     where
-        folding line r = renderLine f line <|> (translate (V2 0 8) *> r)
+        folding line r = renderLine f line <|> (translate (V2 0 16) *> r)
 
 instance Renderable SnakeWorld SnakeTextures where
     render texs world = fixCoords
@@ -60,4 +60,4 @@ instance Renderable SnakeWorld SnakeTextures where
                                     CellSnake _ -> redSquare
                                     _           -> empty)
                                 (getST . getTable $ world)
-            redSquare = translate (V2 4 4) *> getRedSquare texs
+            redSquare = translate (V2 8 8) *> getRedSquare texs
