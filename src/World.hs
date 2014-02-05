@@ -2,6 +2,8 @@
 
 module World where
 
+import Debug.Trace (trace)
+
 import Control.Monad.Fix
 
 import Data.Maybe
@@ -105,14 +107,15 @@ data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
         , getDirection :: Direction
+        , getUpdated :: Bool
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> SnakeWorld
-snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown
+snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown False
 
 -- FIXME
 changeTable :: SnakeTable -> SnakeWorld -> SnakeWorld
-changeTable t w = w { getTable = t }
+changeTable t w = w { getTable = t, getUpdated = True }
 
 data InputState = InputState
         { getUp :: Bool
@@ -123,11 +126,13 @@ data InputState = InputState
         } deriving (Show)
 
 stepWorld :: (a, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) = changeTable (moveSnake len dir table) w
+stepWorld (input, w) = if upd then w else
+    trace (show w) $ changeTable (moveSnake len dir table) w
     where
         table = getTable w
         dir = getDirection w
         len = getLength w
+        upd = getUpdated w
 
 realSnake :: (Monad m) => SnakeWorld -> Wire s e m (a, SnakeWorld) (SnakeWorld, SnakeWorld)
 realSnake w0 = proc (input, w) -> do
@@ -137,8 +142,8 @@ realSnake w0 = proc (input, w) -> do
 snake0 :: (MonadFix m) => SnakeWorld -> Wire s e m a SnakeWorld
 snake0 start = loop (realSnake start)
 
-snake :: (MonadFix m, Monoid e, HasTime t s) => SnakeWorld -> Wire s e m a SnakeWorld
+snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m a SnakeWorld
 snake start = asSoonAs . rtLoop . (snake0 start)
 
-rtLoop :: (Monad m, Monoid e, HasTime t s) => Wire s e m a (Event a)
-rtLoop = for 1 . now --> rtLoop
+rtLoop :: (Monad m, Monoid e, HasTime t s, Fractional t) => Wire s e m a (Event a)
+rtLoop = for 2 . now --> rtLoop
