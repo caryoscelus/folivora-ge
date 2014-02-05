@@ -19,10 +19,16 @@ import System.Random (StdGen, randomR)
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show)
 
-newtype Table a = Table { getTC :: [[a]] } deriving (Show)
+data Table a = Table { getTC :: [[a]]
+                     , getXs :: Int
+                     , getYs :: Int
+                     } deriving (Show)
+
+setTC :: [[a]] -> Table b -> Table a
+setTC c t = t { getTC = c }
 
 instance Functor Table where
-    fmap f (Table t) = Table $ fmap f' t
+    fmap f t = setTC (fmap f' $ getTC t) t
         where
             f' = fmap f
 
@@ -30,14 +36,14 @@ type SnakeTable = Table SnakeCell
 
 snakeTable :: Int -> Int -> SnakeTable
 snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
-                                  in  Table $ take y (repeat line)
+                                  in  Table (take y (repeat line)) x y
                | otherwise      = error "non-positive table size"
 
 changeCell :: (Int, Int) -> SnakeCell -> SnakeTable -> SnakeTable
-changeCell (x, y) cell (Table t) = Table $
-    take y t ++ [line] ++ drop (y+1) t
+changeCell (x, y) cell t = setTC (take y tt ++ [line] ++ drop (y+1) tt) t
     where line = take x ln ++ [cell] ++ drop (x+1) ln
-          ln = t !! y
+          ln = tt !! y
+          tt = getTC t
 
 putSnake :: SnakeTable -> SnakeTable
 putSnake table = changeCell (0, 0) (CellSnake 0)
@@ -79,10 +85,9 @@ applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
         (xd, yd) = dirToPair dir
 
 addHead :: Direction -> SnakeTable -> SnakeTable
-addHead dir (Table table) =
-    Table (take y' table ++ [line'] ++ drop (y'+1) table)
-    
+addHead dir t = setTC (take y' table ++ [line'] ++ drop (y'+1) table) t
     where
+        table = getTC t
         line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
         
         line = table !! y'
@@ -119,8 +124,8 @@ snakeWorld :: Int -> Int -> SnakeWorld
 snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown
 
 -- FIXME
-changeTable :: SnakeTable -> SnakeWorld -> SnakeWorld
-changeTable t w = w { getTable = t }
+setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
+setTable t w = w { getTable = t }
 
 setDir :: Direction -> SnakeWorld -> SnakeWorld
 setDir d w = w { getDirection = d }
@@ -149,7 +154,7 @@ dirFromInput inp = horiz <|> vert
         left  = getLeft inp
 
 stepWorld :: SnakeWorld -> InputState -> SnakeWorld
-stepWorld w input = changeTable (moveSnake len dir'' table)
+stepWorld w input = setTable (moveSnake len dir'' table)
                   . setDir dir''
                   $ w
     where
