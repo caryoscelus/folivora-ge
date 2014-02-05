@@ -149,7 +149,7 @@ stepWorld (input, w) = changeTable (moveSnake len dir' table)
     where
         table = getTable w
         dir = getDirection w
-        dir' = fromMaybe dir (dirFromInput (trace input))
+        dir' = fromMaybe dir (dirFromInput input)
         len = getLength w
         upd = getUpdated w
 

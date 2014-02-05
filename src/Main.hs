@@ -1,6 +1,8 @@
 -- {-# LANGUAGE BangPatterns #-}
 -- {-# LANGUAGE FlexibleContexts #-}
 
+-- import Debug.Trace (trace)
+
 import Control.Monad
 import Data.Maybe
 import Data.Dynamic
@@ -53,6 +55,8 @@ glGo :: (Renderable r t) => () -> t -> (GLFW.Window, GraphicsState) -> Session I
 glGo inputState textures screen s w = do
     (ds, s') <- stepSession s
     
+    GLFW.pollEvents
+    
     let window = fst screen
     
     let gk :: Key -> IO Bool
@@ -78,4 +82,4 @@ main = do
     (window, graphics) <- initGL
     
     texs <- (load :: IO SnakeTextures)
-    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 2 4)
+    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 10 10)
