@@ -59,5 +59,5 @@ instance Renderable SnakeWorld SnakeTextures where
             renderedTable = renderTable (\c -> case c of
                                     CellSnake _ -> redSquare
                                     _           -> empty)
-                                (getST . getTable $ world)
+                                (getTC . getTable $ world)
             redSquare = translate (V2 8 8) *> getRedSquare texs

@@ -18,15 +18,22 @@ import FRP.Netwire hiding (empty)
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show)
 
-newtype SnakeTable = SnakeTable { getST :: [[SnakeCell]] } deriving (Show)
+newtype Table a = Table { getTC :: [[a]] } deriving (Show)
+
+instance Functor Table where
+    fmap f (Table t) = Table $ fmap f' t
+        where
+            f' = fmap f
+
+type SnakeTable = Table SnakeCell
 
 snakeTable :: Int -> Int -> SnakeTable
 snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
-                                  in  SnakeTable $ take y (repeat line)
+                                  in  Table $ take y (repeat line)
                | otherwise      = error "non-positive table size"
 
 changeCell :: (Int, Int) -> SnakeCell -> SnakeTable -> SnakeTable
-changeCell (x, y) cell (SnakeTable t) = SnakeTable $
+changeCell (x, y) cell (Table t) = Table $
     take y t ++ [line] ++ drop (y+1) t
     where line = take x ln ++ [cell] ++ drop (x+1) ln
           ln = t !! y
@@ -51,23 +58,15 @@ dirToPair DUp    = ( 0, -1)
 dirToPair DLeft  = (-1,  0)
 
 increaseSnakeCells :: SnakeTable -> SnakeTable
-increaseSnakeCells (SnakeTable table) = SnakeTable $ map incLine table
+increaseSnakeCells = fmap inc
     where
-        incLine :: [SnakeCell] -> [SnakeCell]
-        incLine = map inc
-        
         inc :: SnakeCell -> SnakeCell
         inc (CellSnake n) = CellSnake (n+1)
         inc x = x
 
--- TODO: make fmap over SnakeTable
-
 removeTail :: Int -> SnakeTable -> SnakeTable
-removeTail m (SnakeTable table) = SnakeTable $ map (remTL m) table
+removeTail m = fmap (remC m)
     where
-        remTL :: Int -> [SnakeCell] -> [SnakeCell]
-        remTL m = map (remC m)
-        
         remC :: Int -> SnakeCell -> SnakeCell
         remC m (CellSnake n) | n >= m = CellEmpty
         remC _ x = x
@@ -79,8 +78,8 @@ applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
         (xd, yd) = dirToPair dir
 
 addHead :: Direction -> SnakeTable -> SnakeTable
-addHead dir (SnakeTable table) =
-    SnakeTable (take y' table ++ [line'] ++ drop (y'+1) table)
+addHead dir (Table table) =
+    Table (take y' table ++ [line'] ++ drop (y'+1) table)
     
     where
         line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
