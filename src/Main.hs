@@ -13,6 +13,8 @@ import qualified Prelude as Prelude
 import FRP.Netwire hiding (empty, unless)
 import Control.Wire hiding (empty, unless)
 
+import System.Random
+
 import Game.Graphics
 
 import qualified Graphics.UI.GLFW as GLFW
@@ -51,8 +53,8 @@ renderFrame (window, graphics) frame = do
 gFail :: (Typeable e) => e -> a
 gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
 
-glGo :: (Renderable r t) => () -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity InputState r -> IO ()
-glGo inputState textures screen s w = do
+glGo :: (Renderable r t) => StdGen -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity InputState r -> IO ()
+glGo gen textures screen s w = do
     (ds, s') <- stepSession s
     
     GLFW.pollEvents
@@ -68,18 +70,19 @@ glGo inputState textures screen s w = do
     left  <- gk Key'Left
     esc   <- gk Key'Escape
     
-    let inputState' = InputState up down right left esc
+    let inputState' = InputState up down right left esc gen
     
     let Identity (mx, w') = stepWire w ds (Right inputState')
     let x = either gFail id mx
     
     renderFrame screen $ render textures x
     
-    glGo inputState textures screen s' w'
+    glGo gen textures screen s' w'
 
 main :: IO ()
 main = do
     (window, graphics) <- initGL
     
     texs <- (load :: IO SnakeTextures)
-    glGo () texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30)
+    gen <- getStdGen
+    glGo gen texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30)

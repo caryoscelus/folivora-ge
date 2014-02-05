@@ -21,6 +21,7 @@ executable snake
                      time == 1.4.*,
                      -- JuicyPixels >= 3.1.3,
                      -- OpenGLRaw,
+                     random,
                      mtl,
                      netwire >= 5.0
   default-language:  Haskell2010

@@ -15,6 +15,7 @@ import qualified Prelude as Prelude
 import Control.Wire hiding (empty)
 import FRP.Netwire hiding (empty)
 
+import System.Random (StdGen, randomR)
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show)
 
@@ -130,6 +131,7 @@ data InputState = InputState
         , getRight :: Bool
         , getLeft :: Bool
         , getEsc :: Bool
+        , getRandom :: StdGen
         } deriving (Show)
 
 dirFromInput :: InputState -> Maybe Direction
