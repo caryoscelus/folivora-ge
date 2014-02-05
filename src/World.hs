@@ -2,7 +2,7 @@
 
 module World where
 
-import Debug.Trace (trace)
+-- import Debug.Trace (trace)
 
 import Control.Monad.Fix
 
@@ -126,24 +126,21 @@ data InputState = InputState
         } deriving (Show)
 
 stepWorld :: (a, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) = if upd then w else
-    trace (show w) $ changeTable (moveSnake len dir table) w
+stepWorld (input, w) =
+    changeTable (moveSnake len dir table) w
     where
         table = getTable w
         dir = getDirection w
         len = getLength w
         upd = getUpdated w
 
-realSnake :: (Monad m) => SnakeWorld -> Wire s e m (a, SnakeWorld) (SnakeWorld, SnakeWorld)
-realSnake w0 = proc (input, w) -> do
-    w' <- arr stepWorld . (second $ delay w0) -< (input, w)
-    returnA -< (w', w')
-
-snake0 :: (MonadFix m) => SnakeWorld -> Wire s e m a SnakeWorld
-snake0 start = loop (realSnake start)
+snakeNew :: SnakeWorld -> Wire s e m (Event a) (Event SnakeWorld)
+snakeNew = accumE (flip . curry $ stepWorld)
 
 snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m a SnakeWorld
-snake start = asSoonAs . rtLoop . (snake0 start)
+snake start = rtLoop >>> (snakeNew start) >>> asSoonAs
 
 rtLoop :: (Monad m, Monoid e, HasTime t s, Fractional t) => Wire s e m a (Event a)
-rtLoop = for 2 . now --> rtLoop
+-- rtLoop = now --> innerLoop
+--     where innerLoop = at 1 --> innerLoop
+rtLoop = for 0.2 . now --> rtLoop
