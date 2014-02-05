@@ -117,6 +117,9 @@ snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown False
 changeTable :: SnakeTable -> SnakeWorld -> SnakeWorld
 changeTable t w = w { getTable = t, getUpdated = True }
 
+setDir :: Direction -> SnakeWorld -> SnakeWorld
+setDir d w = w { getDirection = d }
+
 data InputState = InputState
         { getUp :: Bool
         , getDown :: Bool
@@ -125,19 +128,35 @@ data InputState = InputState
         , getEsc :: Bool
         } deriving (Show)
 
-stepWorld :: (a, SnakeWorld) -> SnakeWorld
-stepWorld (input, w) =
-    changeTable (moveSnake len dir table) w
+dirFromInput :: InputState -> Maybe Direction
+dirFromInput inp = horiz <|> vert
+    where
+        horiz = if right /= left
+                    then Just (if right then DRight else DLeft)
+                    else Nothing
+        vert = if up /= down
+                    then Just (if up then DUp else DDown)
+                    else Nothing
+        up    = getUp inp
+        down  = getDown inp
+        right = getRight inp
+        left  = getLeft inp
+
+stepWorld :: (InputState, SnakeWorld) -> SnakeWorld
+stepWorld (input, w) = changeTable (moveSnake len dir' table)
+                     . setDir dir'
+                     $ w
     where
         table = getTable w
         dir = getDirection w
+        dir' = fromMaybe dir (dirFromInput (trace input))
         len = getLength w
         upd = getUpdated w
 
-snakeNew :: SnakeWorld -> Wire s e m (Event a) (Event SnakeWorld)
+snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
 snakeNew = accumE (flip . curry $ stepWorld)
 
-snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m a SnakeWorld
+snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m InputState SnakeWorld
 snake start = rtLoop >>> (snakeNew start) >>> asSoonAs
 
 rtLoop :: (Monad m, Monoid e, HasTime t s, Fractional t) => Wire s e m a (Event a)
