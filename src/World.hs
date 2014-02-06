@@ -19,6 +19,10 @@ import System.Random (StdGen, randomR)
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
 
+isSnake :: SnakeCell -> Bool
+isSnake (CellSnake _) = True
+isSnake _ = False
+
 data Table a = Table { getTC :: [[a]]
                      , getXs :: Int
                      , getYs :: Int
@@ -123,10 +127,11 @@ data SnakeWorld = SnakeWorld
         , getLength :: Int
         , getDirection :: Direction
         , getRandom :: StdGen
+        , getFailed :: Bool
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
-snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 DDown gen
+snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 DDown gen False
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
@@ -140,6 +145,9 @@ setRandom g w = w { getRandom = g }
 
 setLength :: Int -> SnakeWorld -> SnakeWorld
 setLength l w = w { getLength = l }
+
+setFailed :: Bool -> SnakeWorld -> SnakeWorld
+setFailed f w = w { getFailed = f }
 
 data InputState = InputState
         { getUp :: Bool
@@ -184,8 +192,10 @@ addRandomFood w = setTable (changeCell xy CellFood t) w'
 stepSnake :: SnakeWorld -> SnakeWorld
 stepSnake w = setTable t
           >>> setLength len'
+          >>> setFailed failed
             $ w
     where
+        failed = isSnake cell
         len' = len + if cell == CellFood then 1 else 0
         (t, cell) = moveSnake len dir table
         dir = getDirection w
