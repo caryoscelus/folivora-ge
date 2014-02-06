@@ -22,6 +22,7 @@ import Graphics.UI.GLFW (Key(..), KeyState(..), getKey)
 
 import Render
 import World
+import Game
 
 initGL :: IO (GLFW.Window, GraphicsState)
 initGL = do
@@ -85,4 +86,4 @@ main = do
     
     texs <- (load :: IO SnakeTextures)
     gen <- getStdGen
-    glGo gen texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30 gen)
+    glGo gen texs (window, graphics) clockSession_ $ game (snakeWorld 40 30 gen)

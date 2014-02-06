@@ -9,6 +9,7 @@ import Linear.V2
 import Game.Graphics
 
 import World
+import Game
 
 windowWidth, windowHeight :: Num a => a
 windowWidth = 800
@@ -67,3 +68,11 @@ instance Renderable SnakeWorld SnakeTextures where
                                 (getTC . getTable $ world)
             redSquare = translate (V2 8 8) *> getRedSquare texs
             greenSquare = translate (V2 8 8) *> getGreenSquare texs
+
+instance Renderable GameState SnakeTextures where
+    render texs state = case state of
+        Playing world -> render texs world
+        Paused world  -> render texs world
+        Fail  world   -> render texs world
+        Win  world    -> render texs world
+        NotStarted    -> empty
