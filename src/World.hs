@@ -215,8 +215,11 @@ stepWorld w input = setDir dir''
 snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
 snakeNew = accumE stepWorld
 
+stopOnFail :: Wire s e m (Event SnakeWorld) (Event SnakeWorld)
+stopOnFail = takeWhileE (not . getFailed)
+
 snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m InputState SnakeWorld
-snake start = rtLoop >>> (snakeNew start) >>> asSoonAs
+snake start = rtLoop >>> (snakeNew start) >>> stopOnFail >>> asSoonAs
 
 rtLoop :: (Monad m, Monoid e, HasTime t s, Fractional t) => Wire s e m a (Event a)
 rtLoop = for 0.2 . now --> rtLoop
