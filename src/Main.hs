@@ -70,7 +70,7 @@ glGo gen textures screen s w = do
     left  <- gk Key'Left
     esc   <- gk Key'Escape
     
-    let inputState' = InputState up down right left esc gen
+    let inputState' = InputState up down right left esc
     
     let Identity (mx, w') = stepWire w ds (Right inputState')
     let x = either gFail id mx
@@ -85,4 +85,4 @@ main = do
     
     texs <- (load :: IO SnakeTextures)
     gen <- getStdGen
-    glGo gen texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30)
+    glGo gen texs (window, graphics) clockSession_ $ snake (snakeWorld 40 30 gen)

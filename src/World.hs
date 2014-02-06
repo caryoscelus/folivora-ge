@@ -118,10 +118,11 @@ data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
         , getDirection :: Direction
+        , getRandom :: StdGen
         } deriving (Show)
 
-snakeWorld :: Int -> Int -> SnakeWorld
-snakeWorld x y = SnakeWorld (putSnake (snakeTable x y)) 2 DDown
+snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
+snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 DDown gen
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
@@ -130,13 +131,15 @@ setTable t w = w { getTable = t }
 setDir :: Direction -> SnakeWorld -> SnakeWorld
 setDir d w = w { getDirection = d }
 
+setRandom :: StdGen -> SnakeWorld -> SnakeWorld
+setRandom g w = w { getRandom = g }
+
 data InputState = InputState
         { getUp :: Bool
         , getDown :: Bool
         , getRight :: Bool
         , getLeft :: Bool
         , getEsc :: Bool
-        , getRandom :: StdGen
         } deriving (Show)
 
 dirFromInput :: InputState -> Maybe Direction
@@ -153,19 +156,21 @@ dirFromInput inp = horiz <|> vert
         right = getRight inp
         left  = getLeft inp
 
-addRandomFood :: InputState -> SnakeWorld -> SnakeWorld
-addRandomFood inp w = setTable (changeCell xy CellFood t) w
+addRandomFood :: SnakeWorld -> SnakeWorld
+addRandomFood w = setTable (changeCell xy CellFood t)
+              >>> setRandom gen''
+                $ w
     where
         xy = (x, y)
-        gen = getRandom inp
+        gen = getRandom w
         (x, gen') = randomR (0, getXs t-1) gen
         (y, gen'') = randomR (0, getYs t-1) gen'
         t = getTable w
 
 stepWorld :: SnakeWorld -> InputState -> SnakeWorld
-stepWorld w input = addRandomFood input
-                  . setTable (moveSnake len dir'' table)
-                  . setDir dir''
+stepWorld w input = setDir dir''
+                >>> setTable (moveSnake len dir'' table)
+                >>> addRandomFood
                   $ w
     where
         table = getTable w
