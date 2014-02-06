@@ -17,7 +17,7 @@ import FRP.Netwire hiding (empty)
 
 import System.Random (StdGen, randomR)
 
-data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show)
+data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
 
 data Table a = Table { getTC :: [[a]]
                      , getXs :: Int
@@ -84,13 +84,14 @@ applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
         (x1, y1) = (x+xd, y+yd)
         (xd, yd) = dirToPair dir
 
-addHead :: Direction -> SnakeTable -> SnakeTable
-addHead dir t = setTC (take y' table ++ [line'] ++ drop (y'+1) table) t
+addHead :: Direction -> SnakeTable -> (SnakeTable, SnakeCell)
+addHead dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, cell)
     where
         table = getTC t
         line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
         
         line = table !! y'
+        cell = line !! x'
         (x', y') = applyDirection dir (mx, my) (x, y)
         my = length table
         mx = length . head $ table
@@ -107,10 +108,10 @@ addHead dir t = setTC (take y' table ++ [line'] ++ drop (y'+1) table) t
 -- x', y' = directionApply x, y
 -- t[y'][x'] = None
 
-moveSnake :: Int -> Direction -> SnakeTable -> SnakeTable
-moveSnake len dir table = addHead dir
-                        . removeTail len
-                        . increaseSnakeCells
+moveSnake :: Int -> Direction -> SnakeTable -> (SnakeTable, SnakeCell)
+moveSnake len dir table = increaseSnakeCells
+                      >>> removeTail len
+                      >>> addHead dir
                         $ table
 
 
@@ -133,6 +134,9 @@ setDir d w = w { getDirection = d }
 
 setRandom :: StdGen -> SnakeWorld -> SnakeWorld
 setRandom g w = w { getRandom = g }
+
+setLength :: Int -> SnakeWorld -> SnakeWorld
+setLength l w = w { getLength = l }
 
 data InputState = InputState
         { getUp :: Bool
@@ -168,8 +172,12 @@ addRandomFood w = setTable (changeCell xy CellFood t)
         t = getTable w
 
 stepSnake :: SnakeWorld -> SnakeWorld
-stepSnake w = setTable (moveSnake len dir table) w
+stepSnake w = setTable t
+          >>> setLength len'
+            $ w
     where
+        len' = len + if cell == CellFood then 1 else 0
+        (t, cell) = moveSnake len dir table
         dir = getDirection w
         len = getLength w
         table = getTable w
