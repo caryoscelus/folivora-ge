@@ -38,11 +38,11 @@ data SnakeTextures = SnakeTextures
 
 instance Loadable SnakeTextures where
     load = do
-        etex <- loadTexture Standard Linear "16x16-red.png"
+        etex <- loadTexture Standard Linear "tiles-16x16.png"
         let tex = either error id etex
         return SnakeTextures
                 { getRedSquare   = sprite (V2 0 0) (V2 16 16) tex
-                , getGreenSquare = sprite (V2 0 0) (V2 16 16) tex
+                , getGreenSquare = sprite (V2 16 0) (V2 16 16) tex
                 }
 
 renderLine :: (a -> Image) -> [a] -> Image
