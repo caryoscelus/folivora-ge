@@ -13,13 +13,19 @@ import System.Random (StdGen)
 
 import World
 
-data GameState = Playing SnakeWorld
-               | Paused SnakeWorld
-               | Fail SnakeWorld
-               | Win SnakeWorld
-               | NotStarted
+data GameStatus = Playing | Paused | Fail | Win | NotStarted deriving (Show)
+data GameState = GameState
+        { getStatus :: GameStatus
+        , getWorld :: Maybe SnakeWorld
+        } deriving (Show)
+
+stateNotStarted :: GameState
+stateNotStarted = GameState NotStarted Nothing
+
+statePlaying :: SnakeWorld -> GameState
+statePlaying = GameState Playing . Just
 
 game :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
      => Int -> Int -> StdGen -> Wire s e m InputState GameState
-game xs ys gen = (unless getEsc >>> mkConst (Right NotStarted))
-             --> (snake (snakeWorld xs ys gen) >>^ Playing)
+game xs ys gen = (unless getEsc >>> mkConst (Right stateNotStarted))
+             --> (snake (snakeWorld xs ys gen) >>^ statePlaying)

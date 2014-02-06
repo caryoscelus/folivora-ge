@@ -70,9 +70,6 @@ instance Renderable SnakeWorld SnakeTextures where
             greenSquare = translate (V2 8 8) *> getGreenSquare texs
 
 instance Renderable GameState SnakeTextures where
-    render texs state = case state of
-        Playing world -> render texs world
-        Paused world  -> render texs world
-        Fail  world   -> render texs world
-        Win  world    -> render texs world
-        NotStarted    -> empty
+    render texs state = case getWorld state of
+                            Just w  -> render texs w
+                            Nothing -> empty
