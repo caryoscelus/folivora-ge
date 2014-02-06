@@ -39,6 +39,9 @@ snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
                                   in  Table (take y (repeat line)) x y
                | otherwise      = error "non-positive table size"
 
+getCell :: (Int, Int) -> SnakeTable -> SnakeCell
+getCell (x, y) t = getTC t !! y !! x
+
 changeCell :: (Int, Int) -> SnakeCell -> SnakeTable -> SnakeTable
 changeCell (x, y) cell t = setTC (take y tt ++ [line] ++ drop (y+1) tt) t
     where line = take x ln ++ [cell] ++ drop (x+1) ln
@@ -159,6 +162,18 @@ dirFromInput inp = horiz <|> vert
         down  = getDown inp
         right = getRight inp
         left  = getLeft inp
+
+findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, (Int, Int))
+findRandomCell check w = if check cell
+                            then (w', (x, y))
+                            else findRandomCell check w'
+    where
+        t = (getTable w)
+        cell = getCell (x, y) t
+        gen = getRandom w
+        (x, gen') = randomR (0, getXs t-1) gen
+        (y, gen'') = randomR (0, getYs t-1) gen'
+        w' = setRandom gen'' w
 
 addRandomFood :: SnakeWorld -> SnakeWorld
 addRandomFood w = setTable (changeCell xy CellFood t)
