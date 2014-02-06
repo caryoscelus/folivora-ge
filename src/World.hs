@@ -176,14 +176,9 @@ findRandomCell check w = if check cell
         w' = setRandom gen'' w
 
 addRandomFood :: SnakeWorld -> SnakeWorld
-addRandomFood w = setTable (changeCell xy CellFood t)
-              >>> setRandom gen''
-                $ w
+addRandomFood w = setTable (changeCell xy CellFood t) w'
     where
-        xy = (x, y)
-        gen = getRandom w
-        (x, gen') = randomR (0, getXs t-1) gen
-        (y, gen'') = randomR (0, getYs t-1) gen'
+        (w', xy) = findRandomCell (==CellEmpty) w
         t = getTable w
 
 stepSnake :: SnakeWorld -> SnakeWorld
