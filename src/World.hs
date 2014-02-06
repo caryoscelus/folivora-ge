@@ -167,17 +167,22 @@ addRandomFood w = setTable (changeCell xy CellFood t)
         (y, gen'') = randomR (0, getYs t-1) gen'
         t = getTable w
 
+stepSnake :: SnakeWorld -> SnakeWorld
+stepSnake w = setTable (moveSnake len dir table) w
+    where
+        dir = getDirection w
+        len = getLength w
+        table = getTable w
+
 stepWorld :: SnakeWorld -> InputState -> SnakeWorld
 stepWorld w input = setDir dir''
-                >>> setTable (moveSnake len dir'' table)
+                >>> stepSnake
                 >>> addRandomFood
                   $ w
     where
-        table = getTable w
         dir = getDirection w
         dir' = fromMaybe dir (dirFromInput input)
         dir'' = if opposite dir dir' then dir else dir'
-        len = getLength w
 
 snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
 snakeNew = accumE stepWorld
