@@ -11,8 +11,9 @@ import Control.Wire hiding (empty)
 
 import System.Random (StdGen)
 
-import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..))
+import Graphics.UI.GLFW (Key(..), KeyState(..))
 
+import Input
 import World
 
 data GameStatus = Playing | Paused | Fail | Win | NotStarted deriving (Show)
@@ -33,13 +34,13 @@ game0 xs ys gen = (unless getEsc >>> mkConst (Right stateNotStarted))
              --> (snake (snakeWorld xs ys gen) >>^ statePlaying)
 
 game :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
-      => Int -> Int -> StdGen -> Wire s e m (Event (Key, KeyState, ModifierKeys)) GameState
+      => Int -> Int -> StdGen -> Wire s e m KeyEvent GameState
 game xs ys gen = inputHandler >>> (game0 xs ys gen)
 
 noInput :: InputState
 noInput = InputState False False False False False
 
-makeInput :: (Key, KeyState, ModifierKeys) -> InputState
+makeInput :: KeyMsg -> InputState
 makeInput (k, s, m) =
     if s /= KeyState'Released then
         case k of
@@ -52,6 +53,6 @@ makeInput (k, s, m) =
     else
         noInput
 
-inputHandler :: (Monad m, Monoid e) => Wire s e m (Event (Key, KeyState, ModifierKeys)) InputState
+inputHandler :: (Monad m, Monoid e) => Wire s e m KeyEvent InputState
 inputHandler = accumE (flip (const . makeInput)) noInput >>> filterE (/=noInput) >>> hold
            <|> arr (const noInput)

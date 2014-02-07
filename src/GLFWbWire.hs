@@ -17,6 +17,7 @@ import qualified Graphics.UI.GLFW as GLFW
 import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..), getKey)
 
 import Render
+import Input
 
 gFail :: (Typeable e) => e -> a
 gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
@@ -40,11 +41,6 @@ renderFrame (window, graphics) frame = do
     clear
     _ <- draw graphics frame
     GLFW.swapBuffers window
-
-type KeyEvent = Event (Key, KeyState, ModifierKeys)
-
-keyEvent :: Key -> KeyState -> ModifierKeys -> KeyEvent
-keyEvent key state mods = Event (key, state, mods)
 
 keyCallback :: IORef [KeyEvent] -> GLFW.Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
 keyCallback queue = \win key n state mods ->
