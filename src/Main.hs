@@ -6,19 +6,21 @@
 import Control.Monad
 import Data.Maybe
 import Data.Dynamic
+import Data.IORef
 
-import Prelude hiding ((.), id, filter, null)
+import Prelude hiding ((.), id, filter)
 import qualified Prelude as Prelude
 
 import FRP.Netwire hiding (empty, unless)
 import Control.Wire hiding (empty, unless)
+import Control.Wire.Unsafe.Event (Event(..))
 
 import System.Random
 
 import Game.Graphics
 
 import qualified Graphics.UI.GLFW as GLFW
-import Graphics.UI.GLFW (Key(..), KeyState(..), getKey)
+import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..), getKey)
 
 import Render
 import World
@@ -54,31 +56,34 @@ renderFrame (window, graphics) frame = do
 gFail :: (Typeable e) => e -> a
 gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
 
-glGo :: (Renderable r t) => StdGen -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity InputState r -> IO ()
-glGo gen textures screen s w = do
+type KeyEvent = Event (Key, KeyState, ModifierKeys)
+
+keyEvent :: Key -> KeyState -> ModifierKeys -> KeyEvent
+keyEvent key state mods = Event (key, state, mods)
+
+keyCallback :: IORef [KeyEvent] -> GLFW.Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
+keyCallback queue = \win key n state mods ->
+    modifyIORef queue (keyEvent key state mods:)
+
+glGo :: (Renderable r t) => IORef [KeyEvent] -> StdGen -> t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity KeyEvent r -> IO ()
+glGo queue gen textures screen s w = do
     (ds, s') <- stepSession s
     
     GLFW.pollEvents
     
     let window = fst screen
     
-    let gk :: Key -> IO Bool
-        gk k = liftM (/=KeyState'Released) (getKey window k)
+    events <- readIORef queue
+    let events' = if null events then [NoEvent] else events
+    writeIORef queue (tail events')
+    let event = head events'
     
-    up    <- gk Key'Up
-    down  <- gk Key'Down
-    right <- gk Key'Right
-    left  <- gk Key'Left
-    esc   <- gk Key'Escape
-    
-    let inputState' = InputState up down right left esc
-    
-    let Identity (mx, w') = stepWire w ds (Right inputState')
+    let Identity (mx, w') = stepWire w ds (Right event)
     let x = either gFail id mx
     
     renderFrame screen $ render textures x
     
-    glGo gen textures screen s' w'
+    glGo queue gen textures screen s' w'
 
 main :: IO ()
 main = do
@@ -86,4 +91,5 @@ main = do
     
     texs <- (load :: IO SnakeTextures)
     gen <- getStdGen
-    glGo gen texs (window, graphics) clockSession_ $ game 40 30 gen
+    queue <- newIORef []
+    glGo queue gen texs (window, graphics) clockSession_ $ game 40 30 gen
