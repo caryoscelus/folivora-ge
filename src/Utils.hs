@@ -16,6 +16,7 @@ instance (Integral a) => Integral (V2 a) where
     divMod  a b = (liftA2 div  a b, liftA2 mod a b)
     toInteger _ = error "why would you convert vector to integer?"
 
+
 data Table a = Table { getTC :: [[a]]
                      , getXs :: Int
                      , getYs :: Int
@@ -42,3 +43,8 @@ instance Foldable Table where
     foldMap f t = foldMap f' $ getTC t
         where
             f' = foldMap f
+
+table :: a -> Int -> Int -> Table a
+table empty x y | x > 0 || y > 0 = let line = take x (repeat empty)
+                                   in  Table (take y (repeat line)) x y
+                | otherwise      = error "non-positive table size"

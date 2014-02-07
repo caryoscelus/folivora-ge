@@ -30,11 +30,6 @@ isSnake _ = False
 
 type SnakeTable = Table SnakeCell
 
-snakeTable :: Int -> Int -> SnakeTable
-snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
-                                  in  Table (take y (repeat line)) x y
-               | otherwise      = error "non-positive table size"
-
 -- FIXME
 putSnake :: SnakeTable -> SnakeTable
 putSnake table = setCell (V2 0 0) (CellSnake 0)
@@ -103,7 +98,7 @@ data SnakeWorld = SnakeWorld
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
-snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 (V2 0 0) DDown gen False
+snakeWorld x y gen = SnakeWorld (putSnake (table CellEmpty x y)) 2 (V2 0 0) DDown gen False
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
