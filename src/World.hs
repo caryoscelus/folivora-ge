@@ -95,23 +95,12 @@ addHead :: (Int, Int)
         -> Direction
         -> SnakeTable
         -> (SnakeTable, (Int, Int), SnakeCell)
-addHead (x, y) dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, (x', y'), cell)
+addHead (x, y) dir t = (changeCell (x', y') (CellSnake 0) t, (x', y'), cell)
     where
-        table = getTC t
-        line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
-        
-        line = table !! y'
-        cell = line !! x'
+        cell = getTC t !! y' !! x'
         (x', y') = applyDirection dir (mx, my) (x, y)
         mx = getXs t
         my = getYs t
-
--- for y in range():
---     for x in range():
---         if t[y][x] == 0:
---             r = (x, y)
--- x', y' = directionApply x, y
--- t[y'][x'] = None
 
 moveSnake :: (Int, Int)
           -> Int
