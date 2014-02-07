@@ -53,5 +53,5 @@ makeInput (k, s, m) =
         noInput
 
 inputHandler :: (Monad m, Monoid e) => Wire s e m (Event (Key, KeyState, ModifierKeys)) InputState
-inputHandler = (hold >>^ makeInput)
+inputHandler = accumE (flip (const . makeInput)) noInput >>> filterE (/=noInput) >>> hold
            <|> arr (const noInput)

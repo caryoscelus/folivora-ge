@@ -155,7 +155,7 @@ data InputState = InputState
         , getRight :: Bool
         , getLeft :: Bool
         , getEsc :: Bool
-        } deriving (Show)
+        } deriving (Show, Eq)
 
 dirFromInput :: InputState -> Maybe Direction
 dirFromInput inp = horiz <|> vert
