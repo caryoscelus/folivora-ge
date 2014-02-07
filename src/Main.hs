@@ -5,8 +5,9 @@ import Control.Wire (clockSession_)
 import System.Random
 
 import GLFWbWire
-import Render
 import Game
+import Render
+import SnakeRender
 
 main :: IO ()
 main = do
