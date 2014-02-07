@@ -91,8 +91,11 @@ applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
         (x1, y1) = (x+xd, y+yd)
         (xd, yd) = dirToPair dir
 
-addHead :: Direction -> SnakeTable -> (SnakeTable, SnakeCell)
-addHead dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, cell)
+addHead :: (Int, Int)
+        -> Direction
+        -> SnakeTable
+        -> (SnakeTable, (Int, Int), SnakeCell)
+addHead (x, y) dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, (x', y'), cell)
     where
         table = getTC t
         line' = take x' line ++ [CellSnake 0] ++ drop (x'+1) line
@@ -100,13 +103,8 @@ addHead dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, cell)
         line = table !! y'
         cell = line !! x'
         (x', y') = applyDirection dir (mx, my) (x, y)
-        my = length table
-        mx = length . head $ table
-        y = fromMaybe (error "can't find head") $ findIndex lineHasHead table
-        x = fromMaybe (error "can't find head") $ findIndex cellIsHead (table !! y)
-        lineHasHead ln = isJust $ findIndex cellIsHead ln
-        cellIsHead (CellSnake 1) = True
-        cellIsHead _ = False
+        mx = getXs t
+        my = getYs t
 
 -- for y in range():
 --     for x in range():
@@ -115,23 +113,28 @@ addHead dir t = (setTC (take y' table ++ [line'] ++ drop (y'+1) table) t, cell)
 -- x', y' = directionApply x, y
 -- t[y'][x'] = None
 
-moveSnake :: Int -> Direction -> SnakeTable -> (SnakeTable, SnakeCell)
-moveSnake len dir table = increaseSnakeCells
-                      >>> removeTail len
-                      >>> addHead dir
-                        $ table
+moveSnake :: (Int, Int)
+          -> Int
+          -> Direction
+          -> SnakeTable
+          -> (SnakeTable, (Int, Int), SnakeCell)
+moveSnake oldHead len dir table = increaseSnakeCells
+                              >>> removeTail len
+                              >>> addHead oldHead dir
+                                $ table
 
 
 data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
+        , getHead :: (Int, Int)
         , getDirection :: Direction
         , getRandom :: StdGen
         , getFailed :: Bool
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
-snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 DDown gen False
+snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 (0, 0) DDown gen False
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
@@ -148,6 +151,9 @@ setLength l w = w { getLength = l }
 
 setFailed :: Bool -> SnakeWorld -> SnakeWorld
 setFailed f w = w { getFailed = f }
+
+setHead :: (Int, Int) -> SnakeWorld -> SnakeWorld
+setHead h w = w { getHead = h }
 
 data InputState = InputState
         { getUp :: Bool
@@ -193,14 +199,16 @@ stepSnake :: SnakeWorld -> SnakeWorld
 stepSnake w = setTable t
           >>> setLength len'
           >>> setFailed failed
+          >>> setHead snakeHead'
             $ w
     where
         failed = isSnake cell
         len' = len + if cell == CellFood then 1 else 0
-        (t, cell) = moveSnake len dir table
+        (t, snakeHead', cell) = moveSnake snakeHead len dir table
         dir = getDirection w
         len = getLength w
         table = getTable w
+        snakeHead = getHead w
 
 stepWorld :: SnakeWorld -> InputState -> SnakeWorld
 stepWorld w input = setDir dir''
