@@ -7,11 +7,12 @@ module World where
 import Control.Monad.Fix
 
 import Data.Maybe
-import Data.List
+import Data.Foldable
+import Data.List hiding (any)
 
 import Linear.V2
 
-import Prelude hiding ((.), id, filter, null)
+import Prelude hiding ((.), id, filter, null, any)
 import qualified Prelude as Prelude
 
 import Control.Wire hiding (empty)
@@ -37,6 +38,11 @@ instance Functor Table where
     fmap f t = setTC (fmap f' $ getTC t) t
         where
             f' = fmap f
+
+instance Foldable Table where
+    foldMap f t = foldMap f' $ getTC t
+        where
+            f' = foldMap f
 
 type SnakeTable = Table SnakeCell
 
@@ -176,22 +182,26 @@ dirFromInput inp = horiz <|> vert
         right = getRight inp
         left  = getLeft inp
 
-findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, V2 Int)
-findRandomCell check w = if check cell
-                            then (w', (V2 x y))
-                            else findRandomCell check w'
+findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
+findRandomCell check w
+    | not (any check t) = (w', Nothing)
+    | check cell        = (w', Just (V2 x y))
+    | otherwise         = findRandomCell check w'
     where
         t = (getTable w)
         cell = getCell (V2 x y) t
         gen = getRandom w
-        (x, gen') = randomR (0, getXs t-1) gen
-        (y, gen'') = randomR (0, getYs t-1) gen'
+        (x, gen') = randomR (0, mx) gen
+        (y, gen'') = randomR (0, my) gen'
+        mx = getXs t-1
+        my = getYs t-1
         w' = setRandom gen'' w
 
 addRandomFood :: SnakeWorld -> SnakeWorld
-addRandomFood w = setTable (changeCell xy CellFood t) w'
+addRandomFood w = setTable t' w'
     where
-        (w', xy) = findRandomCell (==CellEmpty) w
+        t' = maybe t (\xy -> changeCell xy CellFood t) mxy
+        (w', mxy) = findRandomCell (==CellEmpty) w
         t = getTable w
 
 stepSnake :: SnakeWorld -> SnakeWorld
