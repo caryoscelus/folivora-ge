@@ -7,7 +7,7 @@ module World where
 import Control.Monad.Fix
 
 import Data.Maybe
-import Data.Foldable
+import Data.Foldable (any)
 import Data.List hiding (any)
 
 import Linear.V2
@@ -20,29 +20,13 @@ import FRP.Netwire hiding (empty)
 
 import System.Random (StdGen, randomR)
 
+import Utils
+
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
 
 isSnake :: SnakeCell -> Bool
 isSnake (CellSnake _) = True
 isSnake _ = False
-
-data Table a = Table { getTC :: [[a]]
-                     , getXs :: Int
-                     , getYs :: Int
-                     } deriving (Show)
-
-setTC :: [[a]] -> Table b -> Table a
-setTC c t = t { getTC = c }
-
-instance Functor Table where
-    fmap f t = setTC (fmap f' $ getTC t) t
-        where
-            f' = fmap f
-
-instance Foldable Table where
-    foldMap f t = foldMap f' $ getTC t
-        where
-            f' = foldMap f
 
 type SnakeTable = Table SnakeCell
 
@@ -51,19 +35,10 @@ snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
                                   in  Table (take y (repeat line)) x y
                | otherwise      = error "non-positive table size"
 
-getCell :: V2 Int -> SnakeTable -> SnakeCell
-getCell (V2 x y) t = getTC t !! y !! x
-
-changeCell :: V2 Int -> SnakeCell -> SnakeTable -> SnakeTable
-changeCell (V2 x y) cell t = setTC (take y tt ++ [line] ++ drop (y+1) tt) t
-    where line = take x ln ++ [cell] ++ drop (x+1) ln
-          ln = tt !! y
-          tt = getTC t
-
 -- FIXME
 putSnake :: SnakeTable -> SnakeTable
-putSnake table = changeCell (V2 0 0) (CellSnake 0)
-               . changeCell (V2 1 0) (CellSnake 1)
+putSnake table = setCell (V2 0 0) (CellSnake 0)
+               . setCell (V2 1 0) (CellSnake 1)
                $ table
 
 data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
@@ -91,17 +66,6 @@ removeTail m = fmap (remC m)
         remC m (CellSnake n) | n >= m = CellEmpty
         remC _ x = x
 
-instance (Enum a) => Enum (V2 a) where
-    succ = fmap succ
-
-instance (Real a) => Real (V2 a) where
-    toRational _ = error "why would you convert vector to rational?"
-
-instance (Integral a) => Integral (V2 a) where
-    quotRem a b = (liftA2 quot a b, liftA2 rem a b)
-    divMod  a b = (liftA2 div  a b, liftA2 mod a b)
-    toInteger _ = error "why would you convert vector to integer?"
-
 applyDirection :: Direction -> V2 Int -> V2 Int -> V2 Int
 applyDirection dir mxy xy = xy' `mod` mxy
     where
@@ -111,7 +75,7 @@ addHead :: V2 Int
         -> Direction
         -> SnakeTable
         -> (SnakeTable, V2 Int, SnakeCell)
-addHead (V2 x y) dir t = (changeCell (V2 x' y') (CellSnake 0) t, (V2 x' y'), cell)
+addHead (V2 x y) dir t = (setCell (V2 x' y') (CellSnake 0) t, (V2 x' y'), cell)
     where
         cell = getTC t !! y' !! x'
         (V2 x' y') = applyDirection dir (V2 mx my) (V2 x y)
@@ -200,7 +164,7 @@ findRandomCell check w
 addRandomFood :: SnakeWorld -> SnakeWorld
 addRandomFood w = setTable t' w'
     where
-        t' = maybe t (\xy -> changeCell xy CellFood t) mxy
+        t' = maybe t (\xy -> setCell xy CellFood t) mxy
         (w', mxy) = findRandomCell (==CellEmpty) w
         t = getTable w
 

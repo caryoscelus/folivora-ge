@@ -7,6 +7,7 @@ import Control.Applicative
 import Linear.V2
 import Game.Graphics
 
+import Utils
 import Render
 import World
 import Game
