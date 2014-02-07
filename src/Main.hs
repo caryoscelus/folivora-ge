@@ -91,5 +91,8 @@ main = do
     
     texs <- (load :: IO SnakeTextures)
     gen <- getStdGen
+    
     queue <- newIORef []
+    GLFW.setKeyCallback window (Just $ keyCallback queue)
+    
     glGo queue gen texs (window, graphics) clockSession_ $ game 40 30 gen
