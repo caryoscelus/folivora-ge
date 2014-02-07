@@ -9,6 +9,8 @@ import Control.Monad.Fix
 import Data.Maybe
 import Data.List
 
+import Linear.V2
+
 import Prelude hiding ((.), id, filter, null)
 import qualified Prelude as Prelude
 
@@ -43,33 +45,31 @@ snakeTable x y | x > 0 || y > 0 = let line = take x (repeat CellEmpty)
                                   in  Table (take y (repeat line)) x y
                | otherwise      = error "non-positive table size"
 
-getCell :: (Int, Int) -> SnakeTable -> SnakeCell
-getCell (x, y) t = getTC t !! y !! x
+getCell :: V2 Int -> SnakeTable -> SnakeCell
+getCell (V2 x y) t = getTC t !! y !! x
 
-changeCell :: (Int, Int) -> SnakeCell -> SnakeTable -> SnakeTable
-changeCell (x, y) cell t = setTC (take y tt ++ [line] ++ drop (y+1) tt) t
+changeCell :: V2 Int -> SnakeCell -> SnakeTable -> SnakeTable
+changeCell (V2 x y) cell t = setTC (take y tt ++ [line] ++ drop (y+1) tt) t
     where line = take x ln ++ [cell] ++ drop (x+1) ln
           ln = tt !! y
           tt = getTC t
 
+-- FIXME
 putSnake :: SnakeTable -> SnakeTable
-putSnake table = changeCell (0, 0) (CellSnake 0)
-               . changeCell (1, 0) (CellSnake 1)
+putSnake table = changeCell (V2 0 0) (CellSnake 0)
+               . changeCell (V2 1 0) (CellSnake 1)
                $ table
 
 data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
 
-tupleOp :: (a -> b -> c) -> (a, a) -> (b, b) -> (c, c)
-tupleOp f = (f *** f) >>> uncurry (***)
-
 opposite :: Direction -> Direction -> Bool
-opposite a b = tupleOp (+) (dirToPair a) (dirToPair b) == (0, 0)
+opposite a b = dirToPair a + dirToPair b == V2 0 0
 
-dirToPair :: Direction -> (Int, Int)
-dirToPair DDown  = ( 0,  1)
-dirToPair DRight = ( 1,  0)
-dirToPair DUp    = ( 0, -1)
-dirToPair DLeft  = (-1,  0)
+dirToPair :: Direction -> V2 Int
+dirToPair DDown  = (V2   0    1)
+dirToPair DRight = (V2   1    0)
+dirToPair DUp    = (V2   0  (-1))
+dirToPair DLeft  = (V2 (-1)   0)
 
 increaseSnakeCells :: SnakeTable -> SnakeTable
 increaseSnakeCells = fmap inc
@@ -85,28 +85,38 @@ removeTail m = fmap (remC m)
         remC m (CellSnake n) | n >= m = CellEmpty
         remC _ x = x
 
-applyDirection :: Direction -> (Int, Int) -> (Int, Int) -> (Int, Int)
-applyDirection dir (mx, my) (x, y) = (x1 `mod` mx, y1 `mod` my)
-    where
-        (x1, y1) = (x+xd, y+yd)
-        (xd, yd) = dirToPair dir
+instance (Enum a) => Enum (V2 a) where
+    succ = fmap succ
 
-addHead :: (Int, Int)
+instance (Real a) => Real (V2 a) where
+    toRational _ = error "why would you convert vector to rational?"
+
+instance (Integral a) => Integral (V2 a) where
+    quotRem a b = (liftA2 quot a b, liftA2 rem a b)
+    divMod  a b = (liftA2 div  a b, liftA2 mod a b)
+    toInteger _ = error "why would you convert vector to integer?"
+
+applyDirection :: Direction -> V2 Int -> V2 Int -> V2 Int
+applyDirection dir mxy xy = xy' `mod` mxy
+    where
+        xy' = xy + dirToPair dir
+
+addHead :: V2 Int
         -> Direction
         -> SnakeTable
-        -> (SnakeTable, (Int, Int), SnakeCell)
-addHead (x, y) dir t = (changeCell (x', y') (CellSnake 0) t, (x', y'), cell)
+        -> (SnakeTable, V2 Int, SnakeCell)
+addHead (V2 x y) dir t = (changeCell (V2 x' y') (CellSnake 0) t, (V2 x' y'), cell)
     where
         cell = getTC t !! y' !! x'
-        (x', y') = applyDirection dir (mx, my) (x, y)
+        (V2 x' y') = applyDirection dir (V2 mx my) (V2 x y)
         mx = getXs t
         my = getYs t
 
-moveSnake :: (Int, Int)
+moveSnake :: V2 Int
           -> Int
           -> Direction
           -> SnakeTable
-          -> (SnakeTable, (Int, Int), SnakeCell)
+          -> (SnakeTable, V2 Int, SnakeCell)
 moveSnake oldHead len dir table = increaseSnakeCells
                               >>> removeTail len
                               >>> addHead oldHead dir
@@ -116,14 +126,14 @@ moveSnake oldHead len dir table = increaseSnakeCells
 data SnakeWorld = SnakeWorld
         { getTable :: SnakeTable
         , getLength :: Int
-        , getHead :: (Int, Int)
+        , getHead :: V2 Int
         , getDirection :: Direction
         , getRandom :: StdGen
         , getFailed :: Bool
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
-snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 (0, 0) DDown gen False
+snakeWorld x y gen = SnakeWorld (putSnake (snakeTable x y)) 2 (V2 0 0) DDown gen False
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld
@@ -141,7 +151,7 @@ setLength l w = w { getLength = l }
 setFailed :: Bool -> SnakeWorld -> SnakeWorld
 setFailed f w = w { getFailed = f }
 
-setHead :: (Int, Int) -> SnakeWorld -> SnakeWorld
+setHead :: V2 Int -> SnakeWorld -> SnakeWorld
 setHead h w = w { getHead = h }
 
 data InputState = InputState
@@ -166,13 +176,13 @@ dirFromInput inp = horiz <|> vert
         right = getRight inp
         left  = getLeft inp
 
-findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, (Int, Int))
+findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, V2 Int)
 findRandomCell check w = if check cell
-                            then (w', (x, y))
+                            then (w', (V2 x y))
                             else findRandomCell check w'
     where
         t = (getTable w)
-        cell = getCell (x, y) t
+        cell = getCell (V2 x y) t
         gen = getRandom w
         (x, gen') = randomR (0, getXs t-1) gen
         (y, gen'') = randomR (0, getYs t-1) gen'
