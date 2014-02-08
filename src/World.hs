@@ -152,4 +152,4 @@ stopOnFail :: Wire s e m (Event SnakeWorld) (Event SnakeWorld)
 stopOnFail = takeWhileE (not . getFailed)
 
 snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m DirectionChange SnakeWorld
-snake start = periodic 0.2 >>> (snakeNew start) >>> stopOnFail >>> asSoonAs
+snake start = periodic 0.05 >>> (snakeNew start) >>> stopOnFail >>> asSoonAs
