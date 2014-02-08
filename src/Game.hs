@@ -52,8 +52,8 @@ newWorld :: StdGen -> SnakeWorld
 newWorld gen = snakeWorld 40 30 gen
 
 stopGame :: (Monad m, Monoid e) => Game -> Wire s e m (Event Input) Game
-stopGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> mkConst (Right g0))
-          --> mkConst (Right $ switchTo Playing (newGame $ getGen g0))
+stopGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> constArr g0)
+          --> constArr (switchTo Playing (newGame $ getGen g0))
 
 resumeGame :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => Game -> Wire s e m (Event Input) Game
 resumeGame g0 = inputHandler >>> snake world' >>^ (\w -> NModeState Playing (Right w) False)
@@ -64,8 +64,8 @@ resumeGame g0 = inputHandler >>> snake world' >>^ (\w -> NModeState Playing (Rig
             Right world  -> world
 
 pauseGame :: (Monad m, Monoid e) => Game -> Wire s e m (Event Input) Game
-pauseGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> mkConst (Right g0))
-           --> mkConst (Right $ switchTo Playing g0)
+pauseGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> constArr g0)
+           --> constArr (switchTo Playing g0)
 
 modeSwitcher :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => GameModes -> Game -> Wire s e m (Event Input) Game
 modeSwitcher k = case k of

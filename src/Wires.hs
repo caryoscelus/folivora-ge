@@ -61,3 +61,6 @@ trueModes choose state0 = switch (choose (mode state0) state0 >>> id &&& checkWi
     where
 --         checkWire :: Wire s e m ms (Event (Wire s e m a ms))
         checkWire = became needSwitch >>> mapEvent (trueModes choose)
+
+constArr :: (Arrow a) => c -> a b c
+constArr = arr . const
