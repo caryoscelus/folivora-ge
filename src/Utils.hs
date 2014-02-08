@@ -1,9 +1,13 @@
 module Utils where
 
 import Control.Applicative
+
+import Prelude hiding (any)
 import Data.Foldable
 
 import Linear.V2
+
+import System.Random (StdGen, randomR)
 
 instance (Enum a) => Enum (V2 a) where
     succ = fmap succ
