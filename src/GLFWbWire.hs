@@ -42,12 +42,12 @@ renderFrame (window, graphics) frame = do
     _ <- draw graphics frame
     GLFW.swapBuffers window
 
-keyCallback :: IORef [KeyEvent] -> GLFW.Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
+keyCallback :: IORef [Event Input] -> GLFW.Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
 keyCallback queue = \win key n state mods ->
     modifyIORef queue (keyEvent key state mods:)
 
 glGo :: (Renderable r t)
-     => t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity KeyEvent r -> IO ()
+     => t -> (GLFW.Window, GraphicsState) -> Session IO s -> Wire s () Identity (Event Input) r -> IO ()
 glGo texs (window, state) s w = do
     queue <- newIORef []
     GLFW.setKeyCallback window (Just $ keyCallback queue)

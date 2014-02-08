@@ -48,3 +48,4 @@ table :: a -> Int -> Int -> Table a
 table empty x y | x > 0 || y > 0 = let line = take x (repeat empty)
                                    in  Table (take y (repeat line)) x y
                 | otherwise      = error "non-positive table size"
+

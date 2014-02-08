@@ -1,4 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module SnakeRender where
 
@@ -11,6 +13,7 @@ import Utils
 import Render
 import World
 import Game
+import Wires
 
 data SnakeTextures = SnakeTextures
         { getRedSquare :: Image
@@ -40,7 +43,7 @@ instance Renderable SnakeWorld SnakeTextures where
             redSquare = translate (V2 8 8) *> getRedSquare texs
             greenSquare = translate (V2 8 8) *> getGreenSquare texs
 
-instance Renderable GameState SnakeTextures where
-    render texs state = case getWorld state of
-                            Just w  -> render texs w
-                            Nothing -> empty
+instance Renderable Game SnakeTextures where
+    render texs state = case getData state of
+                            Right w -> render texs w
+                            Left _  -> empty

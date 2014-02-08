@@ -124,7 +124,6 @@ data InputState = InputState
         , getDown :: Bool
         , getRight :: Bool
         , getLeft :: Bool
-        , getEsc :: Bool
         } deriving (Show, Eq)
 
 dirFromInput :: InputState -> Maybe Direction

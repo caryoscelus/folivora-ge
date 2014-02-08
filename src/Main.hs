@@ -16,4 +16,4 @@ main = do
     texs <- (load :: IO SnakeTextures)
     gen <- getStdGen
     
-    glGo texs (window, graphics) clockSession_ $ game 40 30 gen
+    glGo texs (window, graphics) clockSession_ $ game gen

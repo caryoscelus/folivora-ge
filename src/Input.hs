@@ -8,8 +8,10 @@ import Control.Wire.Unsafe.Event (Event(..))
 
 import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..))
 
-type KeyMsg = (Key, KeyState, ModifierKeys)
-type KeyEvent = Event KeyMsg
+type Input = (Key, KeyState, ModifierKeys)
 
-keyEvent :: Key -> KeyState -> ModifierKeys -> KeyEvent
+keyEvent :: Key -> KeyState -> ModifierKeys -> Event Input
 keyEvent key state mods = Event (key, state, mods)
+
+keyPressed :: Key -> Input -> Bool
+keyPressed key0 (key, state, mods) = key == key0 && state /= KeyState'Released
