@@ -117,6 +117,9 @@ addRandomFood w = setTable t' w'
         (w', mxy) = findRandomCellSnake (==CellEmpty) w
         t = getTable w
 
+haveFood :: SnakeWorld -> Bool
+haveFood w = any (==CellFood) (getTable w)
+
 stepSnake :: SnakeWorld -> SnakeWorld
 stepSnake w = setTable t
           >>> setLength len'
@@ -135,7 +138,7 @@ stepSnake w = setTable t
 stepWorld :: SnakeWorld -> DirectionChange -> SnakeWorld
 stepWorld w input = setDir dir''
                 >>> stepSnake
-                >>> addRandomFood
+                >>> (if not (haveFood w) then addRandomFood else id)
                   $ w
     where
         dir = getDirection w
