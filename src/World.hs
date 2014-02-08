@@ -2,20 +2,16 @@
 
 module World where
 
--- import Debug.Trace (trace)
-
 import Control.Monad.Fix
 
 import Data.Maybe
 import Data.Foldable (any)
-import Data.List hiding (any)
 
 import Linear.V2
 
 import Prelude hiding ((.), id, filter, null, any)
 import qualified Prelude as Prelude
 
-import Control.Wire hiding (empty)
 import FRP.Netwire hiding (empty)
 
 import System.Random (StdGen, randomR)
@@ -38,7 +34,7 @@ type SnakeTable = Table SnakeCell
 -- FIXME
 putSnake :: SnakeTable -> SnakeTable
 putSnake table = setCell (V2 0 0) (CellSnake 0)
-               . setCell (V2 1 0) (CellSnake 1)
+             >>> setCell (V2 1 0) (CellSnake 1)
                $ table
 
 increaseSnakeCells :: SnakeTable -> SnakeTable
