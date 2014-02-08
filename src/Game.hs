@@ -17,6 +17,7 @@ import Graphics.UI.GLFW (Key(..), KeyState(..))
 
 import Input
 import Wires
+import Direction
 import World
 
 data GameModes = NotStarted | Paused | Playing deriving (Ord, Show, Eq)

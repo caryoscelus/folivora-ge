@@ -21,12 +21,17 @@ import FRP.Netwire hiding (empty)
 import System.Random (StdGen, randomR)
 
 import Utils
+import Direction
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
 
 isSnake :: SnakeCell -> Bool
 isSnake (CellSnake _) = True
 isSnake _ = False
+
+mapSnake :: (Int -> Int) -> SnakeCell -> SnakeCell
+mapSnake f (CellSnake x) = CellSnake (f x)
+mapSnake _ cell = cell
 
 type SnakeTable = Table SnakeCell
 
@@ -36,24 +41,8 @@ putSnake table = setCell (V2 0 0) (CellSnake 0)
                . setCell (V2 1 0) (CellSnake 1)
                $ table
 
-data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
-type DirectionChange = Maybe Direction
-
-opposite :: Direction -> Direction -> Bool
-opposite a b = dirToPair a + dirToPair b == V2 0 0
-
-dirToPair :: Direction -> V2 Int
-dirToPair DDown  = (V2   0    1)
-dirToPair DRight = (V2   1    0)
-dirToPair DUp    = (V2   0  (-1))
-dirToPair DLeft  = (V2 (-1)   0)
-
 increaseSnakeCells :: SnakeTable -> SnakeTable
-increaseSnakeCells = fmap inc
-    where
-        inc :: SnakeCell -> SnakeCell
-        inc (CellSnake n) = CellSnake (n+1)
-        inc x = x
+increaseSnakeCells = fmap (mapSnake (+1))
 
 removeTail :: Int -> SnakeTable -> SnakeTable
 removeTail m = fmap (remC m)
