@@ -48,3 +48,14 @@ table empty x y | x > 0 || y > 0 = let line = take x (repeat empty)
                                    in  Table (take y (repeat line)) (V2 x y)
                 | otherwise      = error "non-positive table size"
 
+
+findRandomCell :: (a -> Bool) -> Table a -> StdGen -> (StdGen, Maybe (V2 Int))
+findRandomCell check t gen
+    | not (any check t) = (gen, Nothing)
+    | check cell        = (gen', Just (V2 x y))
+    | otherwise         = findRandomCell check t gen'
+    where
+        cell = getCell (V2 x y) t
+        (x, gen') = randomR (0, mx-1) gen
+        (y, gen'') = randomR (0, my-1) gen'
+        V2 mx my = getTSize t

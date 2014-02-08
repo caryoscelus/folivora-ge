@@ -104,25 +104,17 @@ setFailed f w = w { getFailed = f }
 setHead :: V2 Int -> SnakeWorld -> SnakeWorld
 setHead h w = w { getHead = h }
 
-findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
-findRandomCell check w
-    | not (any check t) = (w', Nothing)
-    | check cell        = (w', Just (V2 x y))
-    | otherwise         = findRandomCell check w'
+findRandomCellSnake :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
+findRandomCellSnake check w = (w', result)
     where
-        t = (getTable w)
-        cell = getCell (V2 x y) t
-        gen = getRandom w
-        (x, gen') = randomR (0, mx-1) gen
-        (y, gen'') = randomR (0, my-1) gen'
-        V2 mx my = getTSize t
-        w' = setRandom gen'' w
+        w' = setRandom gen' $ w
+        (gen', result) = findRandomCell check (getTable w) (getRandom w)
 
 addRandomFood :: SnakeWorld -> SnakeWorld
 addRandomFood w = setTable t' w'
     where
         t' = maybe t (\xy -> setCell xy CellFood t) mxy
-        (w', mxy) = findRandomCell (==CellEmpty) w
+        (w', mxy) = findRandomCellSnake (==CellEmpty) w
         t = getTable w
 
 stepSnake :: SnakeWorld -> SnakeWorld
