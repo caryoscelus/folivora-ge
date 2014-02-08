@@ -18,8 +18,7 @@ instance (Integral a) => Integral (V2 a) where
 
 
 data Table a = Table { getTC :: [[a]]
-                     , getXs :: Int
-                     , getYs :: Int
+                     , getTSize :: V2 Int
                      } deriving (Show)
 
 setTC :: [[a]] -> Table b -> Table a
@@ -46,6 +45,6 @@ instance Foldable Table where
 
 table :: a -> Int -> Int -> Table a
 table empty x y | x > 0 || y > 0 = let line = take x (repeat empty)
-                                   in  Table (take y (repeat line)) x y
+                                   in  Table (take y (repeat line)) (V2 x y)
                 | otherwise      = error "non-positive table size"
 

@@ -60,12 +60,11 @@ addHead :: V2 Int
         -> Direction
         -> SnakeTable
         -> (SnakeTable, V2 Int, SnakeCell)
-addHead (V2 x y) dir t = (setCell (V2 x' y') (CellSnake 0) t, (V2 x' y'), cell)
+addHead xy dir t = (setCell xy' (CellSnake 0) t, xy', cell)
     where
-        cell = getTC t !! y' !! x'
-        (V2 x' y') = applyDirection dir (V2 mx my) (V2 x y)
-        mx = getXs t
-        my = getYs t
+        cell = getCell xy' t
+        xy' = applyDirection dir mxy xy
+        mxy = getTSize t
 
 moveSnake :: V2 Int
           -> Int
@@ -118,10 +117,9 @@ findRandomCell check w
         t = (getTable w)
         cell = getCell (V2 x y) t
         gen = getRandom w
-        (x, gen') = randomR (0, mx) gen
-        (y, gen'') = randomR (0, my) gen'
-        mx = getXs t-1
-        my = getYs t-1
+        (x, gen') = randomR (0, mx-1) gen
+        (y, gen'') = randomR (0, my-1) gen'
+        V2 mx my = getTSize t
         w' = setRandom gen'' w
 
 addRandomFood :: SnakeWorld -> SnakeWorld
