@@ -37,6 +37,7 @@ putSnake table = setCell (V2 0 0) (CellSnake 0)
                $ table
 
 data Direction = DDown | DRight | DUp | DLeft deriving (Show, Eq)
+type DirectionChange = Maybe Direction
 
 opposite :: Direction -> Direction -> Bool
 opposite a b = dirToPair a + dirToPair b == V2 0 0
@@ -119,27 +120,6 @@ setFailed f w = w { getFailed = f }
 setHead :: V2 Int -> SnakeWorld -> SnakeWorld
 setHead h w = w { getHead = h }
 
-data InputState = InputState
-        { getUp :: Bool
-        , getDown :: Bool
-        , getRight :: Bool
-        , getLeft :: Bool
-        } deriving (Show, Eq)
-
-dirFromInput :: InputState -> Maybe Direction
-dirFromInput inp = horiz <|> vert
-    where
-        horiz = if right /= left
-                    then Just (if right then DRight else DLeft)
-                    else Nothing
-        vert = if up /= down
-                    then Just (if up then DUp else DDown)
-                    else Nothing
-        up    = getUp inp
-        down  = getDown inp
-        right = getRight inp
-        left  = getLeft inp
-
 findRandomCell :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
 findRandomCell check w
     | not (any check t) = (w', Nothing)
@@ -177,21 +157,21 @@ stepSnake w = setTable t
         table = getTable w
         snakeHead = getHead w
 
-stepWorld :: SnakeWorld -> InputState -> SnakeWorld
+stepWorld :: SnakeWorld -> DirectionChange -> SnakeWorld
 stepWorld w input = setDir dir''
                 >>> stepSnake
                 >>> addRandomFood
                   $ w
     where
         dir = getDirection w
-        dir' = fromMaybe dir (dirFromInput input)
+        dir' = fromMaybe dir input
         dir'' = if opposite dir dir' then dir else dir'
 
-snakeNew :: SnakeWorld -> Wire s e m (Event InputState) (Event SnakeWorld)
+snakeNew :: SnakeWorld -> Wire s e m (Event DirectionChange) (Event SnakeWorld)
 snakeNew = accumE stepWorld
 
 stopOnFail :: Wire s e m (Event SnakeWorld) (Event SnakeWorld)
 stopOnFail = takeWhileE (not . getFailed)
 
-snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m InputState SnakeWorld
+snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m DirectionChange SnakeWorld
 snake start = periodic 0.2 >>> (snakeNew start) >>> stopOnFail >>> asSoonAs
