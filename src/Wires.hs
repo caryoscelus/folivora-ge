@@ -34,12 +34,17 @@ class (Ord k) => ModeState ms k where
     nextMode s = if needSwitch s
         then Just (mode s)
         else Nothing
+    switchTo :: k -> ms k -> ms k
+    switchTo k = setMode k . setNeedSwitch True
 
 data NModeState b k = NModeState
         { getMode :: k
         , getData :: b
         , getSwitch :: Bool
         }
+
+setData :: b -> NModeState b k -> NModeState b k
+setData d s = s { getData = d }
 
 instance (Ord k) => ModeState (NModeState b) k where
     mode = getMode
