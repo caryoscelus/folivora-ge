@@ -1,5 +1,7 @@
 module Game where
 
+-- import Debug.Trace
+
 import Control.Arrow
 import Control.Monad.Fix
 
@@ -48,8 +50,15 @@ readDirectionChange = mapEvent $ \input ->
         , (Key'Left,  DLeft)
         ]
 
+worldToGame :: SnakeWorld -> Game
+worldToGame w =
+    if not $ getFailed w then
+        NModeState Playing (Right w) False
+    else
+        NModeState NotStarted (Right w) True
+
 resumeGame :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => Game -> Wire s e m (Event Input) Game
-resumeGame g0 = readDirectionChange >>> (filterE isJust <& once) >>> hold >>> snake world' >>^ (\w -> NModeState Playing (Right w) False)
+resumeGame g0 = readDirectionChange >>> (filterE isJust <& once) >>> hold >>> snake world' >>^ worldToGame
     where
         gData = getData g0
         world' = case gData of
@@ -61,10 +70,13 @@ pauseGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> constArr g
            --> constArr (switchTo Playing g0)
 
 modeSwitcher :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => GameModes -> Game -> Wire s e m (Event Input) Game
-modeSwitcher k = case k of
-    NotStarted -> stopGame
-    Paused     -> pauseGame
-    Playing    -> resumeGame
+modeSwitcher k game = case k of
+    NotStarted -> stopGame game'
+    Paused     -> pauseGame game'
+    Playing    -> resumeGame game'
+    
+    where
+        game' = setNeedSwitch False game
 
 game :: (Monoid s, MonadFix m, Monoid e, HasTime t s, Fractional t) => StdGen -> Wire s e m (Event Input) Game
 game gen = trueModes modeSwitcher (newGame gen)

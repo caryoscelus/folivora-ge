@@ -1,6 +1,9 @@
 module Utils where
 
 import Control.Applicative
+import Control.Arrow
+
+import Debug.Trace
 
 import Prelude hiding (any)
 import Data.Foldable
@@ -63,3 +66,9 @@ findRandomCell check t gen
         (x, gen') = randomR (0, mx-1) gen
         (y, gen'') = randomR (0, my-1) gen'
         V2 mx my = getTSize t
+
+traceMe :: (Show a) => a -> a
+traceMe x = trace (show x) x
+
+dropSecond :: (Arrow a) => a b c -> a (b, b') c
+dropSecond a = (uncurry . flip . const $ id) ^>> a

@@ -9,7 +9,7 @@ import Data.Foldable (any)
 
 import Linear.V2
 
-import Prelude hiding ((.), id, filter, null, any)
+import Prelude hiding ((.), id, filter, null, any, until)
 import qualified Prelude as Prelude
 
 import FRP.Netwire hiding (empty)
@@ -148,8 +148,8 @@ stepWorld w input = setDir dir''
 snakeNew :: SnakeWorld -> Wire s e m (Event DirectionChange) (Event SnakeWorld)
 snakeNew = accumE stepWorld
 
-stopOnFail :: Wire s e m (Event SnakeWorld) (Event SnakeWorld)
-stopOnFail = takeWhileE (not . getFailed)
+stopOnFail :: Wire s e m SnakeWorld (Event SnakeWorld)
+stopOnFail = became getFailed
 
 snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m DirectionChange SnakeWorld
-snake start = periodic 0.05 >>> (snakeNew start) >>> stopOnFail >>> asSoonAs
+snake start = periodic 0.05 >>> (snakeNew start) >>> hold >>> (id &&& stopOnFail) >>> (until --> dropSecond (now >>> hold))
