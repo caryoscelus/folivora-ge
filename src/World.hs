@@ -21,6 +21,10 @@ import Direction
 
 data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
 
+instance Monoid SnakeCell where
+    mempty = CellEmpty
+    mappend = error "later"
+
 isSnake :: SnakeCell -> Bool
 isSnake (CellSnake _) = True
 isSnake _ = False
@@ -29,7 +33,7 @@ mapSnake :: (Int -> Int) -> SnakeCell -> SnakeCell
 mapSnake f (CellSnake x) = CellSnake (f x)
 mapSnake _ cell = cell
 
-type SnakeTable = Table SnakeCell
+type SnakeTable = DefaultTileGrid SnakeCell
 
 -- FIXME
 putSnake :: SnakeTable -> SnakeTable
@@ -83,7 +87,7 @@ data SnakeWorld = SnakeWorld
         } deriving (Show)
 
 snakeWorld :: Int -> Int -> StdGen -> SnakeWorld
-snakeWorld x y gen = SnakeWorld (putSnake (table CellEmpty x y)) 2 (V2 0 0) DDown gen False
+snakeWorld x y gen = SnakeWorld (putSnake (emptyGrid $ V2 x y)) 2 (V2 0 0) DDown gen False
 
 -- FIXME
 setTable :: SnakeTable -> SnakeWorld -> SnakeWorld

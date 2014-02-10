@@ -3,10 +3,16 @@
 module Render where
 
 import Control.Applicative
+import Control.Arrow
+
+import Data.Foldable
+import Prelude hiding (foldr)
 
 import Linear.V2
 
 import Game.Graphics
+
+import Utils
 
 windowWidth, windowHeight :: Num a => a
 windowWidth = 800
@@ -28,13 +34,13 @@ fixCoords = do
     -- translate coords to (0, size)
     translate $ V2 (-windowWidth / 2) (-windowHeight / 2)
 
--- TODO: make more generic
-renderLine :: (a -> Image) -> [a] -> Image
+
+renderLine :: (Foldable f) => (a -> Image) -> f a -> Image
 renderLine f t = foldr folding empty t
     where
         folding x r = f x <|> (translate (V2 16 0) *> r)
 
-renderTable :: (a -> Image) -> [[a]] -> Image
+renderTable :: (Foldable f, Foldable g) => (a -> Image) -> f (g a) -> Image
 renderTable f t = foldr folding empty t
     where
         folding line r = renderLine f line <|> (translate (V2 0 16) *> r)
