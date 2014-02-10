@@ -10,6 +10,7 @@ import Linear.V2
 import Game.Graphics
 
 import Utils
+import TileGrid
 import Render
 import World
 import Game
@@ -36,8 +37,8 @@ instance Renderable SnakeWorld SnakeTextures where
                      *> renderedTable
         where
             renderedTable = renderTable (\c -> case c of
-                                    CellSnake _ -> redSquare
-                                    CellFood    -> greenSquare
+                                    TileSnake _ -> redSquare
+                                    TileFood    -> greenSquare
                                     _           -> empty)
                                 (getTC . getTable $ world)
             redSquare = translate (V2 8 8) *> getRedSquare texs

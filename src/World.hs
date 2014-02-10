@@ -17,38 +17,39 @@ import FRP.Netwire hiding (empty)
 import System.Random (StdGen, randomR)
 
 import Utils
+import TileGrid
 import Direction
 
-data SnakeCell = CellEmpty | CellFood | CellSnake Int deriving (Show, Eq)
+data SnakeTile = TileEmpty | TileFood | TileSnake Int deriving (Show, Eq)
 
-instance Monoid SnakeCell where
-    mempty = CellEmpty
-    mappend = error "later"
+instance Monoid SnakeTile where
+    mempty = TileEmpty
+    mappend = error "mappend is not implemented for SnakeTile"
 
-isSnake :: SnakeCell -> Bool
-isSnake (CellSnake _) = True
+isSnake :: SnakeTile -> Bool
+isSnake (TileSnake _) = True
 isSnake _ = False
 
-mapSnake :: (Int -> Int) -> SnakeCell -> SnakeCell
-mapSnake f (CellSnake x) = CellSnake (f x)
+mapSnake :: (Int -> Int) -> SnakeTile -> SnakeTile
+mapSnake f (TileSnake x) = TileSnake (f x)
 mapSnake _ cell = cell
 
-type SnakeTable = DefaultTileGrid SnakeCell
+type SnakeTable = DefaultTileGrid SnakeTile
 
 -- FIXME
 putSnake :: SnakeTable -> SnakeTable
-putSnake table = setCell (V2 0 0) (CellSnake 0)
-             >>> setCell (V2 1 0) (CellSnake 1)
+putSnake table = setTile (V2 0 0) (TileSnake 0)
+             >>> setTile (V2 1 0) (TileSnake 1)
                $ table
 
-increaseSnakeCells :: SnakeTable -> SnakeTable
-increaseSnakeCells = fmap (mapSnake (+1))
+increaseSnakeTiles :: SnakeTable -> SnakeTable
+increaseSnakeTiles = fmap (mapSnake (+1))
 
 removeTail :: Int -> SnakeTable -> SnakeTable
 removeTail m = fmap (remC m)
     where
-        remC :: Int -> SnakeCell -> SnakeCell
-        remC m (CellSnake n) | n >= m = CellEmpty
+        remC :: Int -> SnakeTile -> SnakeTile
+        remC m (TileSnake n) | n >= m = TileEmpty
         remC _ x = x
 
 applyDirection :: Direction -> V2 Int -> V2 Int -> V2 Int
@@ -59,19 +60,19 @@ applyDirection dir mxy xy = xy' `mod` mxy
 addHead :: V2 Int
         -> Direction
         -> SnakeTable
-        -> (SnakeTable, V2 Int, SnakeCell)
-addHead xy dir t = (setCell xy' (CellSnake 0) t, xy', cell)
+        -> (SnakeTable, V2 Int, SnakeTile)
+addHead xy dir t = (setTile xy' (TileSnake 0) t, xy', cell)
     where
-        cell = getCell xy' t
+        cell = getTile xy' t
         xy' = applyDirection dir mxy xy
-        mxy = getTSize t
+        mxy = getGridSize t
 
 moveSnake :: V2 Int
           -> Int
           -> Direction
           -> SnakeTable
-          -> (SnakeTable, V2 Int, SnakeCell)
-moveSnake oldHead len dir table = increaseSnakeCells
+          -> (SnakeTable, V2 Int, SnakeTile)
+moveSnake oldHead len dir table = increaseSnakeTiles
                               >>> removeTail len
                               >>> addHead oldHead dir
                                 $ table
@@ -108,21 +109,21 @@ setFailed f w = w { getFailed = f }
 setHead :: V2 Int -> SnakeWorld -> SnakeWorld
 setHead h w = w { getHead = h }
 
-findRandomCellSnake :: (SnakeCell -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
-findRandomCellSnake check w = (w', result)
+findRandomTileSnake :: (SnakeTile -> Bool) -> SnakeWorld -> (SnakeWorld, Maybe (V2 Int))
+findRandomTileSnake check w = (w', result)
     where
         w' = setRandom gen' $ w
-        (gen', result) = findRandomCell check (getTable w) (getRandom w)
+        (gen', result) = findRandomTile check (getTable w) (getRandom w)
 
 addRandomFood :: SnakeWorld -> SnakeWorld
 addRandomFood w = setTable t' w'
     where
-        t' = maybe t (\xy -> setCell xy CellFood t) mxy
-        (w', mxy) = findRandomCellSnake (==CellEmpty) w
+        t' = maybe t (\xy -> setTile xy TileFood t) mxy
+        (w', mxy) = findRandomTileSnake (==TileEmpty) w
         t = getTable w
 
 haveFood :: SnakeWorld -> Bool
-haveFood w = any (==CellFood) (getTable w)
+haveFood w = any (==TileFood) (getTable w)
 
 stepSnake :: SnakeWorld -> SnakeWorld
 stepSnake w = setTable t
@@ -132,7 +133,7 @@ stepSnake w = setTable t
             $ w
     where
         failed = isSnake cell
-        len' = len + if cell == CellFood then 1 else 0
+        len' = len + if cell == TileFood then 1 else 0
         (t, snakeHead', cell) = moveSnake snakeHead len dir table
         dir = getDirection w
         len = getLength w
