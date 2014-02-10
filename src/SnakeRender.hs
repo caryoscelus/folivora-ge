@@ -32,8 +32,7 @@ instance Loadable SnakeTextures where
 
 
 instance Renderable SnakeWorld SnakeTextures where
-    render texs world = fixCoords
-                     *> translate (V2 16 16)
+    render texs world = translate (V2 16 16)
                      *> renderedTable
         where
             renderedTable = renderTable (\c -> case c of

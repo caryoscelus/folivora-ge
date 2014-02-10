@@ -39,7 +39,7 @@ initGL = do
 renderFrame :: (GLFW.Window, GraphicsState) -> Space Sprite -> IO ()
 renderFrame (window, graphics) frame = do
     clear
-    _ <- draw graphics frame
+    _ <- draw graphics (fixCoords *> frame)
     GLFW.swapBuffers window
 
 keyCallback :: IORef [Event Input] -> GLFW.Window -> Key -> Int -> KeyState -> ModifierKeys -> IO ()
