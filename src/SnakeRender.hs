@@ -44,6 +44,16 @@ instance Renderable SnakeWorld SnakeTextures where
             greenSquare = translate (V2 8 8) *> getGreenSquare texs
 
 instance Renderable Game SnakeTextures where
-    render texs state = case getData state of
-                            Right w -> render texs w
-                            Left _  -> empty
+    render texs state = renderGui <|> renderWorld
+        where
+            renderGui =
+                case mode state of
+                    NotStarted -> translate (V2 300 290) *>
+                                  drawText "Press [space] to (re)start"
+                    Playing    -> empty
+                    Paused     -> translate (V2 300 290) *>
+                                  drawText "Press [space] to continue"
+            renderWorld =
+                case getData state of
+                    Right w -> render texs w
+                    Left _  -> empty

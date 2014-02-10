@@ -44,3 +44,6 @@ renderTable :: (Foldable f, Foldable g) => (a -> Image) -> f (g a) -> Image
 renderTable f t = foldr folding empty t
     where
         folding line r = renderLine f line <|> (translate (V2 0 16) *> r)
+
+drawText :: String -> Image
+drawText = const empty
