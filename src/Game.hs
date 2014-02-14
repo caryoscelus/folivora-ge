@@ -57,19 +57,37 @@ worldToGame w =
     else
         NModeState NotStarted (Right w) True
 
-resumeGame :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => Game -> Wire s e m (Event Input) Game
-resumeGame g0 = readDirectionChange >>> (filterE isJust <& once) >>> hold >>> snake world' >>^ worldToGame
+-- | playing mode wire
+resumeGame
+    :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
+    => Game
+    -> Wire s e m (Event Input) Game
+resumeGame g0 =
+        readDirectionChange
+    >>> (filterE isJust <& once)
+    >>> hold
+    >>> snake world'
+    >>^ worldToGame
     where
         gData = getData g0
         world' = case gData of
             Left gen     -> newWorld gen
             Right world  -> world
 
-pauseGame :: (Monad m, Monoid e) => Game -> Wire s e m (Event Input) Game
+-- | paused mode wire
+pauseGame
+    :: (Monad m, Monoid e)
+    => Game
+    -> Wire s e m (Event Input) Game
 pauseGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> constArr g0)
            --> constArr (switchTo Playing g0)
 
-modeSwitcher :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => GameModes -> Game -> Wire s e m (Event Input) Game
+-- | game modes switching function
+modeSwitcher
+    :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
+    => GameModes
+    -> Game
+    -> Wire s e m (Event Input) Game
 modeSwitcher k game = case k of
     NotStarted -> stopGame game'
     Paused     -> pauseGame game'
@@ -78,5 +96,9 @@ modeSwitcher k game = case k of
     where
         game' = setNeedSwitch False game
 
-game :: (Monoid s, MonadFix m, Monoid e, HasTime t s, Fractional t) => StdGen -> Wire s e m (Event Input) Game
+-- | the most global game wire
+game
+    :: (Monoid s, MonadFix m, Monoid e, HasTime t s, Fractional t)
+    => StdGen
+    -> Wire s e m (Event Input) Game
 game gen = trueModes modeSwitcher (newGame gen)
