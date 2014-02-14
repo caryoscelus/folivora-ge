@@ -19,8 +19,8 @@ import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..), getKey)
 import Render
 import Input
 
-gFail :: (Typeable e) => e -> a
-gFail x = error $ fromDyn (toDyn x) ("Unknown error produced by " ++ show (typeOf x))
+gFail :: (Typeable e) => String -> e -> a
+gFail s x = error $ fromDyn (toDyn x) (s ++ show (typeOf x))
 
 initGL :: IO (GLFW.Window, GraphicsState)
 initGL = do
@@ -67,7 +67,7 @@ glGo texs (window, state) s w = do
             let event = head events'
             
             let Identity (mx, w') = stepWire w ds (Right event)
-            let x = either gFail id mx
+            let x = either (gFail "main wire inhibits ") id mx
             
             renderFrame screen $ render textures x
             
