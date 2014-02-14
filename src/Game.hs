@@ -19,6 +19,7 @@ import Graphics.UI.GLFW (Key(..), KeyState(..))
 
 import Input
 import Wires
+import Utils (dropSecond)
 import Direction
 import World
 
@@ -57,14 +58,24 @@ worldToGame w =
     else
         NModeState NotStarted (Right w) True
 
--- | playing mode wire
+-- | playing mode wire which can be paused
 resumeGame
     :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
     => Game
     -> Wire s e m (Event Input) Game
 resumeGame g0 =
-        readDirectionChange
-    >>> (filterE isJust <& once)
+            (filterE (not . keyPressed Key'Space) >>> playingGame g0)
+        &&& (dropE 1 >>> filterE (keyPressed Key'Space))
+    >>> (until --> dropSecond (now >>> hold >>^ switchTo Paused))
+
+-- | wire playing until fail
+playingGame
+    :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
+    => Game
+    -> Wire s e m (Event Input) Game
+playingGame g0 =
+        readDirectionChange <& (constArr Nothing >>> now)
+    >>> filterE isJust <& once          -- ignore when no input but produce once
     >>> hold
     >>> snake world'
     >>^ worldToGame
@@ -79,7 +90,7 @@ pauseGame
     :: (Monad m, Monoid e)
     => Game
     -> Wire s e m (Event Input) Game
-pauseGame g0 = ((id &&& filterE (keyPressed Key'Space)) >>> until >>> constArr g0)
+pauseGame g0 = ((id &&& (dropE 1 >>> filterE (keyPressed Key'Space))) >>> until >>> constArr g0)
            --> constArr (switchTo Playing g0)
 
 -- | game modes switching function
