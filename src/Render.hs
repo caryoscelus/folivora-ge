@@ -10,7 +10,8 @@ import Prelude hiding (foldr)
 
 import Linear.V2
 
-import Game.Graphics
+import Game.Graphics hiding (loadFont)
+import qualified Game.Graphics as Graphics
 
 import Utils
 
@@ -45,5 +46,8 @@ renderTable f t = foldr folding empty t
     where
         folding line r = renderLine f line <|> (translate (V2 0 16) *> r)
 
-drawText :: String -> Image
-drawText = const empty
+loadFont :: String -> IO Font
+loadFont = Graphics.loadFont
+
+drawText :: Font -> String -> Image
+drawText = fontMessage

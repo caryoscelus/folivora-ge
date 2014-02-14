@@ -17,7 +17,7 @@ executable snake
                      colour == 2.3.*,
                      GLFW-b >= 1.2.1,
                      linear == 1.2.*,
-                     graphics == 0.0.0,
+                     graphics == 0.0.1,
                      time == 1.4.*,
                      random,
                      mtl,

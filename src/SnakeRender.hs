@@ -7,7 +7,7 @@ module SnakeRender where
 import Control.Applicative
 
 import Linear.V2
-import Game.Graphics
+import Game.Graphics hiding (loadFont)
 
 import Utils
 import TileGrid
@@ -19,15 +19,18 @@ import Wires
 data SnakeTextures = SnakeTextures
         { getRedSquare :: Image
         , getGreenSquare :: Image
+        , getNormalFont :: Font
         }
 
 instance Loadable SnakeTextures where
     load = do
         etex <- loadTexture Standard Linear "tiles-16x16.png"
         let tex = either error id etex
+        font <- loadFont "LiberationMono-Regular.ttf"
         return SnakeTextures
                 { getRedSquare   = sprite (V2 0 0) (V2 16 16) tex
                 , getGreenSquare = sprite (V2 16 0) (V2 16 16) tex
+                , getNormalFont  = font
                 }
 
 
@@ -49,11 +52,12 @@ instance Renderable Game SnakeTextures where
             renderGui =
                 case mode state of
                     NotStarted -> translate (V2 300 290) *>
-                                  drawText "Press [space] to (re)start"
+                                  drawText font "Press [space] to (re)start"
                     Playing    -> empty
                     Paused     -> translate (V2 300 290) *>
-                                  drawText "Press [space] to continue"
+                                  drawText font "Press [space] to continue"
             renderWorld =
                 case getData state of
                     Right w -> render texs w
                     Left _  -> empty
+            font = getNormalFont texs
