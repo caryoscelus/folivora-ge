@@ -77,7 +77,7 @@ playingGame g0 =
         readDirectionChange <& (constArr Nothing >>> now)
     >>> filterE isJust <& once          -- ignore when no input but produce once
     >>> hold
-    >>> snake world'
+    >>> snake 0.05 world'
     >>^ worldToGame
     where
         gData = getData g0

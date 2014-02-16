@@ -156,5 +156,14 @@ snakeNew = accumE stepWorld
 stopOnFail :: Wire s e m SnakeWorld (Event SnakeWorld)
 stopOnFail = became getFailed
 
-snake :: (MonadFix m, Monoid e, HasTime t s, Fractional t) => SnakeWorld -> Wire s e m DirectionChange SnakeWorld
-snake start = periodic 0.05 >>> (snakeNew start) >>> hold >>> (id &&& stopOnFail) >>> (until --> dropSecond (now >>> hold))
+snake
+    :: (MonadFix m, Monoid e, HasTime t s, Fractional t)
+    => t
+    -> SnakeWorld
+    -> Wire s e m DirectionChange SnakeWorld
+snake speed start =
+        periodic speed
+    >>> (snakeNew start)
+    >>> hold
+    >>> (id &&& stopOnFail)
+    >>> (until --> dropSecond (now >>> hold))
