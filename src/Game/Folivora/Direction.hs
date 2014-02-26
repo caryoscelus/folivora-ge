@@ -1,4 +1,4 @@
-module Direction where
+module Game.Folivora.Direction where
 
 import Linear.V2
 

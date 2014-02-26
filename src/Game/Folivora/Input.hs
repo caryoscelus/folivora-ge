@@ -1,4 +1,4 @@
-module Input where
+module Game.Folivora.Input where
 
 import Prelude hiding ((.), id, filter)
 import qualified Prelude as Prelude

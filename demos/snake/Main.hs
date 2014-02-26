@@ -4,9 +4,9 @@ import Control.Wire (clockSession_)
 
 import System.Random
 
-import GLFWbWire
+import Game.Folivora.GLFWbWire
+import Game.Folivora.Render
 import Game
-import Render
 import SnakeRender
 
 main :: IO ()

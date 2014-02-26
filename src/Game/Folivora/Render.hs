@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Render where
+module Game.Folivora.Render where
 
 import Control.Applicative
 import Control.Arrow
@@ -13,7 +13,7 @@ import Linear.V2
 import Game.Graphics hiding (loadFont)
 import qualified Game.Graphics as Graphics
 
-import Utils
+import Game.Folivora.Utils
 
 windowWidth, windowHeight :: Num a => a
 windowWidth = 800

@@ -16,9 +16,9 @@ import FRP.Netwire hiding (empty)
 
 import System.Random (StdGen, randomR)
 
-import Utils
-import TileGrid
-import Direction
+import Game.Folivora.Utils
+import Game.Folivora.TileGrid
+import Game.Folivora.Direction
 
 data SnakeTile = TileEmpty | TileFood | TileSnake Int deriving (Show, Eq)
 

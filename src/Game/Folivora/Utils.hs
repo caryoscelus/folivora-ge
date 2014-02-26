@@ -1,4 +1,4 @@
-module Utils where
+module Game.Folivora.Utils where
 
 import Control.Applicative
 import Control.Arrow

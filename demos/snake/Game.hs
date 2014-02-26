@@ -17,10 +17,11 @@ import System.Random (StdGen)
 
 import Graphics.UI.GLFW (Key(..), KeyState(..))
 
-import Input
-import Wires
-import Utils (dropSecond)
-import Direction
+import Game.Folivora.Input
+import Game.Folivora.Wires
+import Game.Folivora.Utils (dropSecond)
+import Game.Folivora.Direction
+
 import World
 
 data GameModes = NotStarted | Paused | Playing deriving (Ord, Show, Eq)

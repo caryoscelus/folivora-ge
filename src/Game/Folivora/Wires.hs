@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Wires where
+module Game.Folivora.Wires where
 
 import Prelude hiding ((.), id, filter, null)
 import qualified Prelude as Prelude

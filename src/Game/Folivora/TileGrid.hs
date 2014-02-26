@@ -1,4 +1,4 @@
-module TileGrid where
+module Game.Folivora.TileGrid where
 
 import Control.Arrow
 
@@ -11,7 +11,7 @@ import System.Random (StdGen, randomR)
 
 import Linear.V2
 
-import Utils
+import Game.Folivora.Utils
 
 type DefaultTileGrid = Table
 

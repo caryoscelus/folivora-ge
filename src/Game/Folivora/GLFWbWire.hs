@@ -1,4 +1,4 @@
-module GLFWbWire where
+module Game.Folivora.GLFWbWire where
 
 import Control.Monad
 import Data.Maybe
@@ -16,8 +16,8 @@ import Game.Graphics
 import qualified Graphics.UI.GLFW as GLFW
 import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..), getKey)
 
-import Render
-import Input
+import Game.Folivora.Render
+import Game.Folivora.Input
 
 gFail :: (Typeable e) => String -> e -> a
 gFail s x = error $ fromDyn (toDyn x) (s ++ show (typeOf x))

@@ -9,12 +9,13 @@ import Control.Applicative
 import Linear.V2
 import Game.Graphics hiding (loadFont)
 
-import Utils
-import TileGrid
-import Render
+import Game.Folivora.Utils
+import Game.Folivora.TileGrid
+import Game.Folivora.Render
+import Game.Folivora.Wires
+
 import World
 import Game
-import Wires
 
 data SnakeTextures = SnakeTextures
         { getRedSquare :: Image
