@@ -6,6 +6,7 @@ import System.Random
 
 import Game.Folivora.GLFWbWire
 import Game.Folivora.Render
+
 import Game
 import SnakeRender
 
