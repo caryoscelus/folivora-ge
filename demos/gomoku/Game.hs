@@ -28,6 +28,12 @@ emptyGame = NModeState NotStarted Nothing False
 newGame :: Game
 newGame = NModeState NotStarted (Just newWorld) False
 
+modifyWorld :: (GomokuWorld -> GomokuWorld) -> Game -> Game
+modifyWorld f game = game { getData = Just w' }
+    where
+        w' = f w
+        w = fromJust $ getData game
+
 stopGame
     :: (Monad m, Monoid e)
     => Game
@@ -39,13 +45,13 @@ playerMove
     :: (Monad m, Monoid e)
     => Game
     -> Wire s e m (Event Input) Game
-playerMove g0 = constArr g0
+playerMove g0 = constArr (switchTo ComputerMove g0)
 
 computerMove
     :: (Monad m, Monoid e)
     => Game
     -> Wire s e m (Event Input) Game
-computerMove g0 = constArr g0
+computerMove g0 = constArr (modifyWorld computerMakeMove g0)
 
 modeSwitcher
     :: (Monad m, Monoid e)

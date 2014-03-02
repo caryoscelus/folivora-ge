@@ -22,3 +22,6 @@ data GomokuWorld = GomokuWorld
 
 newWorld :: GomokuWorld
 newWorld = GomokuWorld (emptyGrid (V2 17 17)) Player
+
+computerMakeMove :: GomokuWorld -> GomokuWorld
+computerMakeMove world = GomokuWorld (setTile (V2 5 5) (Just Computer) (getTable world)) Player
