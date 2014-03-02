@@ -22,8 +22,11 @@ data GameModes = NotStarted | PlayerMove | ComputerMove deriving (Ord, Show, Eq)
 
 type Game = NModeState (Maybe GomokuWorld) GameModes
 
+emptyGame :: Game
+emptyGame = NModeState NotStarted Nothing False
+
 newGame :: Game
-newGame = NModeState NotStarted Nothing False
+newGame = NModeState NotStarted (Just newWorld) False
 
 stopGame
     :: (Monad m, Monoid e)
@@ -60,4 +63,4 @@ modeSwitcher k game = case k of
 game
     :: (Monad m, Monoid e, Monoid s)
     => Wire s e m (Event Input) Game
-game = trueModes modeSwitcher newGame
+game = trueModes modeSwitcher emptyGame
