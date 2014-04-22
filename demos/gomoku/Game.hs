@@ -13,6 +13,8 @@ import qualified Prelude as Prelude
 import FRP.Netwire hiding (empty)
 import Control.Wire hiding (empty)
 
+import Linear.V2
+
 import Graphics.UI.GLFW (Key(..), KeyState(..))
 
 import Game.Folivora.Input
@@ -47,8 +49,17 @@ playerMove
     :: (Monad m, Monoid e)
     => Game
     -> Wire s e m (Event Input) Game
-playerMove g0 = (constArr g0 &&& (dropE 1 >>> filterE (keyPressed Key'Space))) >>> until
-            --> constArr (switchTo PlayerMove (modifyWorld occupyTile g0))
+playerMove g0 = (dropE 1 >>> filterE (keyPressedF $ const True) >>> hold >>^ handleInput)
+            <|> constArr g0
+    where
+        handleInput inp = switchTo PlayerMove $ modifyWorld (chooseMod inp) g0
+        chooseMod inp
+            | keyPressed Key'Space inp = occupyTile
+            | keyPressed Key'Right inp = modifyPosition (V2   1   0)
+            | keyPressed Key'Left  inp = modifyPosition (V2 (-1)  0)
+            | keyPressed Key'Down  inp = modifyPosition (V2   0   1)
+            | keyPressed Key'Up    inp = modifyPosition (V2   0 (-1))
+            | otherwise                = id
 
 modeSwitcher
     :: (Monad m, Monoid e)
