@@ -51,7 +51,7 @@ instance Renderable GomokuWorld GomokuTextures where
 instance Renderable Game GomokuTextures where
     render texs game =
         case getData game of
-            (Just world) -> translate (V2 20 500) *> drawText font "Some world, yay" 
+            (Just world) -> translate (V2 20 500) *> drawText font ("Some world, yay! It's " ++ show (getTurn world) ++ "'s move..")
                         <|> render texs world
             Nothing      -> translate (V2 20 500) *> drawText font "No world, duh.."
         where
