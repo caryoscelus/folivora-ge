@@ -1,5 +1,7 @@
 module Game where
 
+-- import Debug.Trace
+
 import Control.Arrow
 import Control.Monad.Fix
 
@@ -18,7 +20,7 @@ import Game.Folivora.Wires
 
 import World
 
-data GameModes = NotStarted | PlayerMove | ComputerMove deriving (Ord, Show, Eq)
+data GameModes = NotStarted | PlayerMove deriving (Ord, Show, Eq)
 
 type Game = NModeState (Maybe GomokuWorld) GameModes
 
@@ -45,13 +47,8 @@ playerMove
     :: (Monad m, Monoid e)
     => Game
     -> Wire s e m (Event Input) Game
-playerMove g0 = constArr (switchTo ComputerMove g0)
-
-computerMove
-    :: (Monad m, Monoid e)
-    => Game
-    -> Wire s e m (Event Input) Game
-computerMove g0 = constArr (modifyWorld computerMakeMove g0)
+playerMove g0 = (constArr g0 &&& (dropE 1 >>> filterE (keyPressed Key'Space))) >>> until
+            --> constArr (switchTo PlayerMove (modifyWorld occupyTile g0))
 
 modeSwitcher
     :: (Monad m, Monoid e)
@@ -61,7 +58,6 @@ modeSwitcher
 modeSwitcher k game = case k of
     NotStarted   -> stopGame game'
     PlayerMove   -> playerMove game'
-    ComputerMove -> computerMove game'
     
     where
         game' = setNeedSwitch False game
