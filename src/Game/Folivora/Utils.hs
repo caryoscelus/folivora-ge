@@ -37,5 +37,8 @@ enumerateV2 f (V2 mx my) = fmap (\y -> fmap (\x -> f $ V2 x y) [0..mx]) [0..my]
 traceMe :: (Show a) => a -> a
 traceMe x = trace (show x) x
 
+dropFirst :: (Arrow a) => a b c -> a (b', b) c
+dropFirst a = (uncurry . const $ id) ^>> a
+
 dropSecond :: (Arrow a) => a b c -> a (b, b') c
 dropSecond a = (uncurry . flip . const $ id) ^>> a
