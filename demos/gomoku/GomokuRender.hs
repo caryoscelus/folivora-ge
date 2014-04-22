@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module GomokuRender where
 
@@ -51,8 +52,13 @@ instance Renderable GomokuWorld GomokuTextures where
 instance Renderable Game GomokuTextures where
     render texs game =
         case getData game of
-            (Just world) -> translate (V2 20 500) *> drawText font ("Some world, yay! It's " ++ show (getTurn world) ++ "'s move..")
+            (Just world) -> translate (V2 20 500) *> drawText font (worldMessage world)
                         <|> render texs world
             Nothing      -> translate (V2 20 500) *> drawText font "No world, duh.."
         where
             font = getNormalFont texs
+            worldMessage (GomokuWorld {..})
+                | getStatus == Playing  = "It's " ++ show getTurn ++ "'s move.."
+                | getStatus == Win      = show getTurn ++ " HAVE WON!"
+                | getStatus == Full     = "Woah, board is full!"
+                | otherwise             = "Duh, i'm not aware of such status: " ++ show getStatus
