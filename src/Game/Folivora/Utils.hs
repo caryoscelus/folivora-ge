@@ -28,6 +28,9 @@ v2Cast (V2 x y) = V2 (realToFrac x) (realToFrac y)
 v2CastI :: (Integral a, Num b) => V2 a -> V2 b
 v2CastI (V2 x y) = V2 (fromIntegral x) (fromIntegral y)
 
+v2C :: (Real a, Real a', Fractional b) => a -> a' -> V2 b
+v2C x y = V2 (realToFrac x) (realToFrac y)
+
 v2ToPair :: V2 a -> (a, a)
 v2ToPair (V2 x y) = (x, y)
 
