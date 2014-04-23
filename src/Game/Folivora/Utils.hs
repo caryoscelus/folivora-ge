@@ -32,7 +32,7 @@ v2ToPair :: V2 a -> (a, a)
 v2ToPair (V2 x y) = (x, y)
 
 enumerateV2 :: (Integral i) => (V2 i -> a) -> V2 i -> [[a]]
-enumerateV2 f (V2 mx my) = fmap (\y -> fmap (\x -> f $ V2 x y) [0..mx]) [0..my]
+enumerateV2 f (V2 mx my) = fmap (\y -> fmap (\x -> f $ V2 x y) [0..mx-1]) [0..my-1]
 
 traceMe :: (Show a) => a -> a
 traceMe x = trace (show x) x
