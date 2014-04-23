@@ -10,7 +10,7 @@ import Prelude hiding (foldr)
 
 import Linear.V2
 
-import Game.Graphics hiding (loadFont)
+import Game.Graphics hiding (loadFont, sprite)
 import qualified Game.Graphics as Graphics
 
 import Game.Folivora.Utils
@@ -31,7 +31,7 @@ class (Loadable t) => Renderable r t where
 fixCoords :: Space ()
 fixCoords = do
     -- scale coords from (-1, 1) to (-size/2, size/2)
-    scale $ V2 (recip windowWidth * 2) (0 - recip windowHeight * 2)
+    scale $ V2 (recip windowWidth * 2) (-recip windowHeight * 2)
     -- translate coords to (0, size)
     translate $ V2 (-windowWidth / 2) (-windowHeight / 2)
 
@@ -56,3 +56,6 @@ loadFont = Graphics.loadFont
 
 drawText :: Font -> String -> Image
 drawText = fontMessage
+
+sprite :: V2 Int -> V2 Int -> Texture -> Image
+sprite xy wh tex = scale (V2 1 (-1)) *> Graphics.sprite xy wh tex
