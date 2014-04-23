@@ -8,7 +8,7 @@ module GomokuRender where
 import Control.Applicative
 
 import Linear.V2
-import Game.Graphics hiding (loadFont)
+import Game.Graphics hiding (loadFont, sprite)
 
 import Game.Folivora.Utils
 import Game.Folivora.TileGrid
