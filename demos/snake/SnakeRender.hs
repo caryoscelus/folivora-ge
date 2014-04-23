@@ -39,7 +39,7 @@ instance Renderable SnakeWorld SnakeTextures where
     render texs world = translate (V2 16 16)
                      *> renderedTable
         where
-            renderedTable = renderTable (\c -> case c of
+            renderedTable = renderTable (V2 16 16) (\c -> case c of
                                     TileSnake _ -> redSquare
                                     TileFood    -> greenSquare
                                     _           -> empty)

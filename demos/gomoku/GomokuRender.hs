@@ -41,7 +41,7 @@ instance Loadable GomokuTextures where
 
 instance Renderable GomokuWorld GomokuTextures where
     render texs world =
-            translate (V2 16 16) *> renderTable tr (getTC . getTable $ world)
+            translate (V2 16 16) *> renderTable (V2 16 16) tr (getTC . getTable $ world)
         <|> translate ((v2Cast (getPosition world) + V2 1 1) * 16) *> getHighlightSquare texs
     
         where
