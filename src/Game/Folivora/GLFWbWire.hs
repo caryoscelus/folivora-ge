@@ -52,10 +52,12 @@ glGo :: (Renderable r t)
 glGo texs (window, state) s w = do
     queue <- newIORef []
     GLFW.setKeyCallback window (Just $ keyCallback queue)
-    go queue texs (window, state) s w
+    player <- newPlayerState
+    playerThread player
+    go queue texs (window, state) player s w
     
     where
-        go queue textures screen s w = do
+        go queue textures screen player s w = do
             (ds, s') <- stepSession s
             
             GLFW.pollEvents
@@ -72,6 +74,6 @@ glGo texs (window, state) s w = do
             
             let rendered = render textures x
             renderFrame screen $ renderedImage rendered
-            renderSound $ renderedSound rendered
+            renderSound player $ renderedSound rendered
             
-            go queue textures screen s' w'
+            go queue textures screen player s' w'

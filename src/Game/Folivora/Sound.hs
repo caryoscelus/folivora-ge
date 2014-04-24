@@ -2,21 +2,34 @@ module Game.Folivora.Sound where
 
 import Control.Concurrent
 
+import Data.IORef
+
 import Control.Monad ( when, unless )
 import Sound.ALUT
 
-
 type Sound = Maybe String
 
-renderSound :: Sound -> IO ()
-renderSound Nothing = return ()
-renderSound (Just fname) = do
-    forkIO $ playFile fname
-    return ()
+type NowPlaying = [String]
+
+newPlayerState :: IO (IORef NowPlaying)
+newPlayerState = newIORef []
+
+renderSound :: IORef NowPlaying -> Sound -> IO ()
+renderSound _ Nothing = return ()
+renderSound ref (Just sound) = atomicModifyIORef' ref $ \lst -> (sound:lst, ())
+
+playerThread :: IORef NowPlaying -> IO ThreadId
+playerThread nowPlayingRef = forkIO $ withProgNameAndArgs runALUT $ \_ _ -> thread nowPlayingRef []
+    where
+        thread toPlayRef nowPlaying = do
+            toPlay <- atomicModifyIORef' toPlayRef (\x -> ([], x))
+            mapM_ (\sound -> forkIO $ playFile sound) toPlay
+            -- TODO: fix garbaging..
+            thread toPlayRef (nowPlaying ++ toPlay)
 
 -- taken from ALUT examples..
 playFile :: FilePath -> IO ()
-playFile fileName = withProgNameAndArgs runALUT $ \_ _ -> do
+playFile fileName = do
     -- Create an AL buffer from the given sound file.
     buf <- createBuffer (File fileName)
 
