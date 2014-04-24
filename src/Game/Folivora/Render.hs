@@ -14,19 +14,25 @@ import Game.Graphics hiding (loadFont, sprite)
 import qualified Game.Graphics as Graphics
 
 import Game.Folivora.Utils
+import Game.Folivora.Sound
 
 windowWidth, windowHeight :: Num a => a
 windowWidth = 800
 windowHeight = 600
 
 type Image = Space Sprite
-type Rendered = Image
+data Rendered = Rendered
+        { renderedImage :: Image
+        , renderedSound :: Sound
+        }
 
 class Loadable t where
     load :: IO t
 
 class (Loadable t) => Renderable r t where
+    renderGfx :: t -> r -> Image
     render :: t -> r -> Rendered
+    render t r = Rendered (renderGfx t r) Nothing
 
 fixCoords :: Space ()
 fixCoords = do

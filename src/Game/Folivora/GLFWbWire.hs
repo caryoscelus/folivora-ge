@@ -17,6 +17,7 @@ import qualified Graphics.UI.GLFW as GLFW
 import Graphics.UI.GLFW (Key(..), KeyState(..), ModifierKeys(..), getKey)
 
 import Game.Folivora.Render
+import Game.Folivora.Sound
 import Game.Folivora.Input
 
 gFail :: (Typeable e) => String -> e -> a
@@ -69,6 +70,8 @@ glGo texs (window, state) s w = do
             let Identity (mx, w') = stepWire w ds (Right event)
             let x = either (gFail "main wire inhibits ") id mx
             
-            renderFrame screen $ render textures x
+            let rendered = render textures x
+            renderFrame screen $ renderedImage rendered
+            renderSound $ renderedSound rendered
             
             go queue textures screen s' w'

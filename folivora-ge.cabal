@@ -18,6 +18,7 @@ library
                      GLFW-b >= 1.2.1,
                      linear == 1.2.*,
                      graphics == 0.0.1,
+                     ALUT >= 2,
                      time == 1.4.*,
                      random,
                      mtl,
@@ -30,7 +31,8 @@ library
                      Game.Folivora.Render,
                      Game.Folivora.TileGrid,
                      Game.Folivora.Utils,
-                     Game.Folivora.Wires
+                     Game.Folivora.Wires,
+                     Game.Folivora.Sound
 
 flag examples
   description:          build demos
