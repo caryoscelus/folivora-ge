@@ -6,6 +6,8 @@ module Game.Folivora.Wires where
 import Prelude hiding ((.), id, filter, null)
 import qualified Prelude as Prelude
 
+-- !
+import Control.Wire.Unsafe.Event (Event(..))
 import FRP.Netwire hiding (empty)
 
 mapEvent
@@ -64,3 +66,22 @@ trueModes choose state0 = switch (choose (mode state0) state0 >>> id &&& checkWi
 
 constArr :: (Arrow a) => c -> a b c
 constArr = arr . const
+
+changed :: (Monad m, Eq a) => Wire s e m a (Event a)
+changed = arr Just >>> (id &&& delay Nothing) >>> arr test >>> maybeToEvent
+    where
+        test (x1, x0) | x1 /= x0        = x1
+                      | otherwise       = Nothing
+
+
+maybeToEvent :: (Monad m) => Wire s e m (Maybe a) (Event a)
+maybeToEvent = arr m2e
+    where
+        m2e Nothing = NoEvent
+        m2e (Just x) = Event x
+
+eventToMaybe :: (Monad m) => Wire s e m (Event a) (Maybe a)
+eventToMaybe = arr e2m
+    where
+        e2m NoEvent = Nothing
+        e2m (Event x) = Just x
