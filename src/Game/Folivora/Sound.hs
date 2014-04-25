@@ -19,9 +19,7 @@ newPlayerState = newIORef []
 
 renderSound :: IORef NowPlaying -> SoundCommand -> IO ()
 renderSound _ Nothing = return ()
-renderSound ref sound = do
-    lst <- atomicModifyIORef' ref $ \lst -> (ChannelToPlay sound : lst, lst)
-    print lst
+renderSound ref sound = lst <- atomicModifyIORef' ref $ \lst -> (ChannelToPlay sound : lst, lst)
 
 playerThread :: IORef NowPlaying -> IO ThreadId
 playerThread nowPlayingRef = forkIO $ withProgNameAndArgs runALUT $ \_ _ -> thread nowPlayingRef
