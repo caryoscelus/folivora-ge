@@ -3,29 +3,52 @@ module Game.Folivora.Sound where
 import Control.Concurrent
 
 import Data.IORef
+import Data.List
 
 import Control.Monad ( when, unless )
 import Sound.ALUT
 
-type Sound = Maybe String
+type SoundCommand = Maybe String
+type Sound = SoundCommand
 
-type NowPlaying = [String]
+data Channel = ChannelPlaying ThreadId | ChannelToPlay SoundCommand | ChannelGarbage deriving (Eq, Show)
+type NowPlaying = [Channel]
 
 newPlayerState :: IO (IORef NowPlaying)
 newPlayerState = newIORef []
 
-renderSound :: IORef NowPlaying -> Sound -> IO ()
+renderSound :: IORef NowPlaying -> SoundCommand -> IO ()
 renderSound _ Nothing = return ()
-renderSound ref (Just sound) = atomicModifyIORef' ref $ \lst -> (sound:lst, ())
+renderSound ref sound = do
+    lst <- atomicModifyIORef' ref $ \lst -> (ChannelToPlay sound : lst, lst)
+    print lst
 
 playerThread :: IORef NowPlaying -> IO ThreadId
-playerThread nowPlayingRef = forkIO $ withProgNameAndArgs runALUT $ \_ _ -> thread nowPlayingRef []
+playerThread nowPlayingRef = forkIO $ withProgNameAndArgs runALUT $ \_ _ -> thread nowPlayingRef
     where
-        thread toPlayRef nowPlaying = do
-            toPlay <- atomicModifyIORef' toPlayRef (\x -> ([], x))
-            mapM_ (\sound -> forkIO $ playFile sound) toPlay
-            -- TODO: fix garbaging..
-            thread toPlayRef (nowPlaying ++ toPlay)
+        thread nowPlayingRef = do
+            channels <- atomicModifyIORef nowPlayingRef $
+                        \chans ->
+                            let chans' = filter (/= ChannelGarbage) chans
+                                (toPlay, playing) = partition isToPlay chans'
+                                isToPlay (ChannelToPlay _) = True
+                                isToPlay _ = False
+                            in
+                                (playing, toPlay)
+            
+            channels' <- mapM processChannel channels
+            
+            atomicModifyIORef nowPlayingRef $ \chans -> (chans ++ channels', ())
+            
+            thread nowPlayingRef
+        
+        processChannel :: Channel -> IO Channel
+        processChannel (ChannelToPlay (Just sound)) = do
+            tid <- forkIO $ playFile sound
+            return $ ChannelPlaying tid
+        processChannel (ChannelToPlay Nothing) = return ChannelGarbage
+        processChannel x = return x
+
 
 -- taken from ALUT examples..
 playFile :: FilePath -> IO ()
