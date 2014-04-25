@@ -23,7 +23,12 @@ https://github.com/caryoscelus/graphics (also buildable with cabal)
 Demos
 -----
 
-Some demos are included and will be built by default. 
+Some demos are included and will be built by default. They will only run from
+top directory since they need resources in it (unless you symlink or copy them).
+
+Note that demos code is usually only being updated to be compilable and
+runnable, no proper refactoring is made. So it's always better to look at newer
+demos code.
 
 License
 -------
