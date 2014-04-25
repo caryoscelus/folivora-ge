@@ -36,8 +36,8 @@ instance Loadable SnakeTextures where
 
 
 instance Renderable SnakeWorld SnakeTextures where
-    render texs world = translate (V2 16 16)
-                     *> renderedTable
+    renderGfx texs world = translate (V2 16 16)
+                        *> renderedTable
         where
             renderedTable = renderTable (V2 16 16) (\c -> case c of
                                     TileSnake _ -> redSquare
@@ -48,7 +48,7 @@ instance Renderable SnakeWorld SnakeTextures where
             greenSquare = translate (V2 8 8) *> getGreenSquare texs
 
 instance Renderable Game SnakeTextures where
-    render texs state = renderGui <|> renderWorld
+    renderGfx texs state = renderGui <|> renderWorld
         where
             renderGui =
                 case mode state of
@@ -59,6 +59,6 @@ instance Renderable Game SnakeTextures where
                                   drawText font "Press [space] to continue"
             renderWorld =
                 case getData state of
-                    Right w -> render texs w
+                    Right w -> renderGfx texs w
                     Left _  -> empty
             font = getNormalFont texs

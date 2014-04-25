@@ -40,7 +40,7 @@ instance Loadable GomokuTextures where
                 }
 
 instance Renderable GomokuWorld GomokuTextures where
-    render texs world =
+    renderGfx texs world =
             translate (V2 16 16) *> renderTable (V2 16 16) tr (getTC . getTable $ world)
         <|> translate ((v2Cast (getPosition world) + V2 1 1) * 16) *> getHighlightSquare texs
     
@@ -50,10 +50,10 @@ instance Renderable GomokuWorld GomokuTextures where
             tr Nothing         = getEmptySquare texs
 
 instance Renderable Game GomokuTextures where
-    render texs game =
+    renderGfx texs game =
         case getData game of
             (Just world) -> translate (V2 20 500) *> drawText font (worldMessage world)
-                        <|> render texs world
+                        <|> renderGfx texs world
             Nothing      -> translate (V2 20 500) *> drawText font "No world, duh.."
         where
             font = getNormalFont texs

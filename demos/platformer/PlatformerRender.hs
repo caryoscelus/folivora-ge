@@ -44,7 +44,8 @@ instance Loadable PlatformerTextures where
                 }
 
 instance Renderable PlatformerWorld PlatformerTextures where
-    render (PlatformerTextures {..}) (PlatformerWorld {..}) =
+    render texs world = Rendered (renderGfx texs world) (Just "sounds.wav")
+    renderGfx (PlatformerTextures {..}) (PlatformerWorld {..}) =
         translate (V2 32 32) *> renderTable (V2 32 32) tr (getTC tileMap)
         
         where
