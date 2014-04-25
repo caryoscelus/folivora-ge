@@ -42,15 +42,25 @@ playerThread nowPlayingRef = forkIO $ withProgNameAndArgs runALUT $ \_ _ -> thre
         
         processChannel :: Channel -> IO Channel
         processChannel (ChannelToPlay (Just sound)) = do
-            tid <- forkIO $ playFile sound
+            tid <- playFileThreaded nowPlayingRef sound
             return $ ChannelPlaying tid
         processChannel (ChannelToPlay Nothing) = return ChannelGarbage
         processChannel x = return x
 
 
+
+playFileThreaded :: IORef NowPlaying -> FilePath -> IO ThreadId
+playFileThreaded np fp = do
+    tidRef <- newEmptyMVar
+    tid <- forkIO $ do
+        tid <- takeMVar tidRef
+        playFile np tid fp
+    putMVar tidRef tid
+    return tid
+
 -- taken from ALUT examples..
-playFile :: FilePath -> IO ()
-playFile fileName = do
+playFile :: IORef NowPlaying -> ThreadId -> FilePath -> IO ()
+playFile nowPlayingRef tid fileName = do
     -- Create an AL buffer from the given sound file.
     buf <- createBuffer (File fileName)
 
@@ -66,3 +76,10 @@ playFile fileName = do
             when (state == Playing) $
                 waitWhilePlaying
     waitWhilePlaying
+    
+    atomicModifyIORef nowPlayingRef $ \chans -> (map (removeMe tid) chans, ())
+    
+    where
+        removeMe :: ThreadId -> Channel -> Channel
+        removeMe tid (ChannelPlaying tid') | tid == tid' = ChannelGarbage
+        removeMe _ x = x
