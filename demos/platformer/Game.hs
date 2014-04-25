@@ -17,25 +17,30 @@ import Linear.V2
 
 import Graphics.UI.GLFW (Key(..), KeyState(..))
 
+import Game.Folivora.Sound
 import Game.Folivora.Input
 import Game.Folivora.Wires
 
 import World
 
-data GameData = GameData PlatformerWorld
+data GameData = GameData
+        { gameWorld :: PlatformerWorld
+        , soundCommand :: SoundCommand
+        }
+
 data GameModes = Playing deriving (Ord, Show, Eq)
 type Game = NModeState GameData GameModes
 
 emptyGame :: Game
-emptyGame = NModeState Playing (GameData newWorld) False
+emptyGame = NModeState Playing (GameData newWorld Nothing) False
 
 gameToWorld :: Game -> PlatformerWorld
 gameToWorld game = data2W $ getData game
     where
-        data2W (GameData w) = w
+        data2W (GameData w _) = w
 
-worldToGame :: PlatformerWorld -> Game
-worldToGame world = NModeState Playing (GameData world) False
+worldToGame :: (Monad m) => Wire s e m PlatformerWorld Game
+worldToGame = id &&& (arr worldSound >>> changed >>> eventToMaybe) >>^ (uncurry GameData >>> (\x -> NModeState Playing x False))
 
 worldUpdater :: PlatformerWorld -> Wire s e m (Event UserControl) (Event PlatformerWorld)
 worldUpdater = accumE worldStep
@@ -59,7 +64,7 @@ continueGame g0 =
     >>> periodic 1
     >>> worldUpdater (gameToWorld g0)
     >>> hold
-    >>^ worldToGame
+    >>> worldToGame
 
 modeSwitcher
     :: (Monad m, Monoid e, HasTime t s)

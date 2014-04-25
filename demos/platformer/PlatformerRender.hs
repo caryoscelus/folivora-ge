@@ -44,7 +44,6 @@ instance Loadable PlatformerTextures where
                 }
 
 instance Renderable PlatformerWorld PlatformerTextures where
-    render texs world = Rendered (renderGfx texs world) (Just "sounds.wav")
     renderGfx (PlatformerTextures {..}) (PlatformerWorld {..}) =
         translate (V2 32 32) *> renderTable (V2 32 32) tr (getTC tileMap)
         
@@ -56,7 +55,8 @@ instance Renderable PlatformerWorld PlatformerTextures where
             tr Bullet           = tileEmpty <|> tileBullet
 
 instance Renderable GameData PlatformerTextures where
-    render texs (GameData world) = render texs world
+    render texs gdata = Rendered (renderGfx texs gdata) (soundCommand gdata)
+    renderGfx texs (GameData world _) = renderGfx texs world
 
 instance Renderable Game PlatformerTextures where
     render texs (NModeState {..}) = render texs getData

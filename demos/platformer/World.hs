@@ -11,6 +11,7 @@ import Control.Applicative
 import Linear.V2
 
 import Game.Folivora.TileGrid
+import Game.Folivora.Sound
 
 -- enemy: delay to fire next bullet
 data PlatformerTile = Empty | Floor | Player | Enemy Int | Bullet
@@ -27,6 +28,7 @@ data PlatformerWorld = PlatformerWorld
         , player :: V2 Int
         , enemy :: V2 Int
         , bullet :: V2 Int
+        , worldSound :: String
         }
 
 data UserControl = UserControl
@@ -36,9 +38,10 @@ data UserControl = UserControl
 worldStep :: PlatformerWorld -> UserControl -> PlatformerWorld
 worldStep world (UserControl {..}) =
     fixMap world $ world
-        { player  = player world + walkTo
-        , enemy   = enemy world
-        , bullet  = bullet world + V2 (-1) 0
+        { player        = player world + walkTo
+        , enemy         = enemy world
+        , bullet        = bullet world + V2 (-1) 0
+        , worldSound    = "sounds.wav"
         }
     
     where
